@@ -1,0 +1,311 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  @@unique([identifier, token])
+}
+
+model User {
+  id                String             @id @default(cuid())
+  phone             String             @unique
+  email             String?            @unique
+  passwordHash      String?
+  role              String             // DIRECTOR | MANAGER | TEACHER | STUDENT | PARENT
+  name              String
+  createdAt         DateTime           @default(now())
+  accounts          Account[]
+  sessions          Session[]
+  teacher           Teacher?
+  parent            Parent?
+  pushSubscriptions PushSubscription[]
+  resolvedDiscounts DiscountRequest[]  @relation("ResolvedByDirector")
+  notifications     Notification[]
+
+  @@index([phone])
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  phone     String
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  @@index([phone])
+}
+
+model Teacher {
+  id               String            @id @default(cuid())
+  userId           String            @unique
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject          String?           @default("Общий предмет")
+  salary           Int?              @default(0)
+  groups           Group[]
+  starTransactions StarTransaction[]
+  grades           Grade[]
+
+  @@index([userId])
+}
+
+model Parent {
+  id       String    @id @default(cuid())
+  userId   String    @unique
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  students Student[]
+
+  @@index([userId])
+}
+
+model Student {
+  id                  String               @id @default(cuid())
+  name                String
+  parentId            String
+  parent              Parent               @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  groupId             String?
+  group               Group?               @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  stars               Int                  @default(0)
+  phone               String?
+  parentPhone         String?
+  birthDate           String?
+  subject             String?
+  status              String               @default("ACTIVE") // ACTIVE | INACTIVE | NEW | LEFT
+  createdAt           DateTime             @default(now())
+  attendanceRecords   AttendanceRecord[]
+  starTransactions    StarTransaction[]
+  discountRequests    DiscountRequest[]
+  payments            Payment[]
+  homeworkSubmissions HomeworkSubmission[]
+  grades              Grade[]
+
+  @@index([parentId])
+  @@index([groupId])
+}
+
+model Group {
+  id           String      @id @default(cuid())
+  name         String
+  subject      String?     @default("Английский язык")
+  level        String?     @default("A1 Beginner")
+  teacherId    String
+  teacher      Teacher     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  room         String?     @default("Кабинет 101")
+  monthlyPrice Int         @default(350000)
+  startDate    DateTime?   @default(now())
+  status       String      @default("ACTIVE") // ACTIVE | RECRUITING | COMPLETED | ARCHIVED
+  createdAt    DateTime    @default(now())
+  students     Student[]
+  lessons      Lesson[]
+  payments     Payment[]
+  homeworks    Homework[]
+  grades       Grade[]
+
+  @@index([teacherId])
+}
+
+model Lesson {
+  id                String             @id @default(cuid())
+  groupId           String
+  group             Group              @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  dayOfWeek         Int?
+  date              DateTime?
+  startTime         String
+  endTime           String
+  room              String?            @default("Кабинет 101")
+  status            String             @default("SCHEDULED") // SCHEDULED | COMPLETED | CANCELLED
+  createdAt         DateTime           @default(now())
+  attendanceRecords AttendanceRecord[]
+  grades            Grade[]
+
+  @@index([groupId])
+  @@index([date])
+}
+
+model AttendanceRecord {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  lessonId  String
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  date      DateTime
+  status    String
+  createdAt DateTime @default(now())
+  @@unique([studentId, lessonId, date])
+  @@index([studentId])
+  @@index([lessonId])
+  @@index([date])
+}
+
+model StarTransaction {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  amount    Int
+  reason    String
+  teacherId String
+  teacher   Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@index([studentId])
+  @@index([teacherId])
+  @@index([createdAt])
+}
+
+model DiscountRequest {
+  id              String    @id @default(cuid())
+  studentId       String
+  student         Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  discountPercent Int
+  starsCost       Int
+  status          String    @default("PENDING")
+  createdAt       DateTime  @default(now())
+  resolvedAt      DateTime?
+  resolvedBy      String?
+  resolver        User?     @relation("ResolvedByDirector", fields: [resolvedBy], references: [id], onDelete: SetNull)
+  @@index([studentId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model PushSubscription {
+  id       String @id @default(cuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint String @unique
+  keys     String
+  @@index([userId])
+}
+
+model Payment {
+  id            String   @id @default(cuid())
+  studentId     String
+  student       Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  groupId       String?
+  group         Group?   @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  amount        Int
+  date          DateTime @default(now())
+  paymentMethod String   @default("Наличные") // Наличные | Payme | Click | Карта
+  status        String   @default("PAID") // PAID | PENDING | OVERDUE | REFUNDED
+  comment       String?
+  createdAt     DateTime @default(now())
+
+  @@index([studentId])
+  @@index([groupId])
+  @@index([status])
+}
+
+model Homework {
+  id          String               @id @default(cuid())
+  title       String
+  description String
+  groupId     String
+  group       Group                @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  deadline    DateTime
+  createdAt   DateTime             @default(now())
+  submissions HomeworkSubmission[]
+
+  @@index([groupId])
+}
+
+model HomeworkSubmission {
+  id          String    @id @default(cuid())
+  homeworkId  String
+  homework    Homework  @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status      String    @default("ASSIGNED") // ASSIGNED | IN_PROGRESS | SUBMITTED | CHECKED | OVERDUE
+  grade       Int?
+  comment     String?
+  submittedAt DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([homeworkId, studentId])
+  @@index([homeworkId])
+  @@index([studentId])
+}
+
+model Grade {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacherId String
+  teacher   Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  groupId   String?
+  group     Group?   @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  lessonId  String?
+  lesson    Lesson?  @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  gradeInt  Int
+  comment   String?
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@index([studentId])
+  @@index([teacherId])
+}
+
+model Reward {
+  id              String   @id @default(cuid())
+  name            String
+  description     String
+  starsCost       Int
+  discountPercent Int      @default(0)
+  available       Boolean  @default(true)
+  createdAt       DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  category  String   @default("SYSTEM") // Attendance | Payment | Homework | Grade | Reward | Schedule | SYSTEM
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([read])
+}
+
+model CenterSettings {
+  id        String   @id @default(cuid())
+  name      String   @default("Friday Education")
+  phone     String   @default("+998 90 123 45 67")
+  address   String   @default("г. Ташкент, ул. Навои 14")
+  logo      String?
+  createdAt DateTime @default(now())
+}

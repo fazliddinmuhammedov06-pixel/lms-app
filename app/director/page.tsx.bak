@@ -1,0 +1,131 @@
+'use client';
+
+import { useState } from 'react';
+
+const mockGroups = [
+  { id: 'g1', name: 'Группа A1 - Начинающие' },
+  { id: 'g2', name: 'Группа B2 - Продвинутые' },
+];
+
+const mockStudents = [
+  { id: 's1', name: 'Смирнов Алексей', totalStars: 850, currentBalance: 320, attendance: null as 'PRESENT' | 'ABSENT' | 'LATE' | null },
+  { id: 's2', name: 'Кузнецова Мария', totalStars: 1200, currentBalance: 520, attendance: null as 'PRESENT' | 'ABSENT' | 'LATE' | null },
+  { id: 's3', name: 'Петров Дмитрий', totalStars: 450, currentBalance: 180, attendance: null as 'PRESENT' | 'ABSENT' | 'LATE' | null },
+  { id: 's4', name: 'Иванова Анна', totalStars: 320, currentBalance: 320, attendance: null as 'PRESENT' | 'ABSENT' | 'LATE' | null },
+  { id: 's5', name: 'Сидоров Павел', totalStars: 150, currentBalance: 150, attendance: null as 'PRESENT' | 'ABSENT' | 'LATE' | null },
+];
+
+export default function TeacherPage() {
+  const [selectedGroup, setSelectedGroup] = useState('g1');
+  const [students, setStudents] = useState(mockStudents);
+
+  const handleAttendance = (studentId: string, status: 'PRESENT' | 'ABSENT' | 'LATE') => {
+    setStudents(students.map((s) => (s.id === studentId ? { ...s, attendance: status } : s)));
+    console.log('Отметка посещаемости:', studentId, status);
+    // TODO: Server Action + push при ABSENT
+  };
+
+  const handleAddStars = (studentId: string, amount: number) => {
+    setStudents(students.map((s) => s.id === studentId ? { ...s, totalStars: s.totalStars + amount, currentBalance: s.currentBalance + amount } : s));
+    console.log('Начислить звёзды:', studentId, amount);
+    // TODO: Server Action
+  };
+
+  const sortedStudents = [...students].sort((a, b) => b.totalStars - a.totalStars);
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Панель учителя</h1>
+
+        {/* Селектор группы */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Выберите группу:</label>
+          <select
+            value={selectedGroup}
+            onChange={(e) => setSelectedGroup(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          >
+            {mockGroups.map((group) => (
+              <option key={group.id} value={group.id}>
+                {group.name} - {new Date().toLocaleDateString('ru-RU')}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Список учеников */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Ученики ({sortedStudents.length})</h2>
+          <div className="space-y-4">
+            {sortedStudents.map((student, index) => (
+              <div key={student.id} className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">
+                    {index + 1}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">{student.name}</h3>
+                    <p className="text-sm text-gray-600">
+                      Всего: {student.totalStars} ⭐ | Баланс: {student.currentBalance} ⭐
+                    </p>
+                  </div>
+                </div>
+
+                {/* Посещаемость */}
+                <div className="mb-3">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Посещаемость:</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleAttendance(student.id, 'PRESENT')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                        student.attendance === 'PRESENT' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-green-50'
+                      }`}
+                    >
+                      ✓ Был
+                    </button>
+                    <button
+                      onClick={() => handleAttendance(student.id, 'ABSENT')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                        student.attendance === 'ABSENT' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-red-50'
+                      }`}
+                    >
+                      ✗ Пропустил
+                    </button>
+                    <button
+                      onClick={() => handleAttendance(student.id, 'LATE')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                        student.attendance === 'LATE' ? 'bg-yellow-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-yellow-50'
+                      }`}
+                    >
+                      ⌚ Опоздал
+                    </button>
+                  </div>
+                </div>
+
+                {/* Начисление звёзд */}
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-2">Начислить звёзды:</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleAddStars(student.id, 5)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                    >
+                      +5 ⭐
+                    </button>
+                    <button
+                      onClick={() => handleAddStars(student.id, 10)}
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                    >
+                      +10 ⭐
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

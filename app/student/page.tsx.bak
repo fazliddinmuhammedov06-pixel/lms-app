@@ -1,0 +1,160 @@
+'use client';
+
+import { useState } from 'react';
+import { getStudentLevel } from '@/lib/levels';
+
+const mockStudents = [
+  { id: 's1', name: 'Смирнов Алексей', totalStars: 850, currentBalance: 320 },
+  { id: 's2', name: 'Смирнова Мария', totalStars: 450, currentBalance: 200 },
+];
+
+const mockAbsences = [
+  { date: '24.08.2026', groupName: 'Группа A1 - Начинающие', time: '10:00' },
+  { date: '20.08.2026', groupName: 'Группа A1 - Начинающие', time: '10:00' },
+];
+
+export default function StudentPage() {
+  const [selectedStudent, setSelectedStudent] = useState(mockStudents[0]);
+  const [showToast, setShowToast] = useState(false);
+
+  const studentLevel = getStudentLevel(selectedStudent.totalStars, selectedStudent.currentBalance);
+
+  const rewards = [
+    { id: 'r1', name: 'Скидка 5%', description: 'Скидка 5% на следующий месяц', discountPercent: 5, starsCost: 250, available: selectedStudent.currentBalance >= 250 },
+    { id: 'r2', name: 'Скидка 10%', description: 'Скидка 10% на следующий месяц', discountPercent: 10, starsCost: 450, available: selectedStudent.currentBalance >= 450 },
+  ];
+
+  const handleRedeem = (reward: typeof rewards[0]) => {
+    console.log('Обменять на:', reward);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+    // TODO: Server Action
+  };
+
+  const handleRequestPushPermission = () => {
+    console.log('Запрос разрешения на push');
+    // TODO: Service Worker
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Профиль ученика</h1>
+
+        {/* Переключатель детей */}
+        {mockStudents.length > 1 && (
+          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Выберите ученика:</label>
+            <select
+              value={selectedStudent.id}
+              onChange={(e) => setSelectedStudent(mockStudents.find((s) => s.id === e.target.value)!)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            >
+              {mockStudents.map((student) => (
+                <option key={student.id} value={student.id}>{student.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Карточка уровня */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">{selectedStudent.name}</h2>
+              <p className="text-lg text-blue-600 font-semibold">
+                Уровень {studentLevel.level}: {studentLevel.levelName}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-3xl font-bold text-gray-900">{selectedStudent.currentBalance} ⭐</p>
+              <p className="text-sm text-gray-600">Текущий баланс</p>
+            </div>
+          </div>
+
+          {/* Прогресс-бар */}
+          <div className="mb-4">
+            <div className="flex justify-between text-sm text-gray-600 mb-2">
+              <span>Всего заработано: {studentLevel.totalStars} ⭐</span>
+              {studentLevel.nextLevelStars !== null && (
+                <span>До следующего уровня: {studentLevel.nextLevelStars} ⭐</span>
+              )}
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-4">
+              <div
+                className="bg-blue-600 h-4 rounded-full transition-all duration-300"
+                style={{ width: `${studentLevel.progressPercent}%` }}
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Магазин наград */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Магазин наград</h2>
+          <div className="grid grid-cols-2 gap-4">
+            {rewards.map((reward) => (
+              <div
+                key={reward.id}
+                className={`border-2 rounded-lg p-4 ${
+                  reward.available ? 'border-blue-300 bg-blue-50' : 'border-gray-200 bg-gray-50'
+                }`}
+              >
+                <h3 className="font-semibold text-gray-900 mb-1">{reward.name}</h3>
+                <p className="text-sm text-gray-600 mb-3">{reward.description}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-lg font-bold text-gray-900">{reward.starsCost} ⭐</span>
+                  <button
+                    onClick={() => handleRedeem(reward)}
+                    disabled={!reward.available}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                      reward.available
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
+                  >
+                    Обменять
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Уведомления о пропусках */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Последние пропуски</h2>
+          {mockAbsences.length === 0 ? (
+            <p className="text-gray-500">Пропусков нет</p>
+          ) : (
+            <div className="space-y-3">
+              {mockAbsences.map((absence, idx) => (
+                <div key={idx} className="border border-red-200 bg-red-50 rounded-lg p-3">
+                  <p className="font-medium text-gray-900">{absence.date} в {absence.time}</p>
+                  <p className="text-sm text-gray-600">{absence.groupName}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Кнопка push-уведомлений */}
+        <div className="text-center">
+          <button
+            onClick={handleRequestPushPermission}
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium"
+          >
+            🔔 Включить уведомления
+          </button>
+        </div>
+
+        {/* Toast */}
+        {showToast && (
+          <div className="fixed bottom-8 right-8 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg">
+            ✓ Заявка на скидку отправлена!
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
