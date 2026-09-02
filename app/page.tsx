@@ -47,7 +47,7 @@ export default function LoginPage() {
       });
       const cd = (await cr.json()) as { exists?: boolean };
       if (!cd.exists) {
-        setError('Номер не найден. Обратитесь к администратору или зарегистрируйтесь.');
+        setError('Номер не найден. Обратитесь к администратору.');
         return;
       }
       const r = await fetch('/api/auth/send-otp', {
@@ -203,13 +203,8 @@ export default function LoginPage() {
 
         <div className="mt-6 pt-6 border-t border-slate-700 text-center">
           <p className="text-slate-400 text-sm">
-            Нет аккаунта?{' '}
-            <Link
-              href="/register"
-              className="text-orange-400 hover:text-orange-300 transition-colors font-medium"
-            >
-              Зарегистрироваться
-            </Link>
+            Уже есть аккаунт?{' '}
+            <Link href=\"/\" className=\"text-orange-400 hover:text-orange-300 transition-colors font-medium\">Войти</Link>
           </p>
         </div>
       </div>
