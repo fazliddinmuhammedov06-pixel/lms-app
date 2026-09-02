@@ -204,7 +204,7 @@ export default function LoginPage() {
         <div className="mt-6 pt-6 border-t border-slate-700 text-center">
           <p className="text-slate-400 text-sm">
             Уже есть аккаунт?{' '}
-            <Link href=\"/\" className=\"text-orange-400 hover:text-orange-300 transition-colors font-medium\">Войти</Link>
+            <Link href="/" className="text-orange-400 hover:text-orange-300 transition-colors font-medium">Войти</Link>
           </p>
         </div>
       </div>
