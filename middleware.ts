@@ -3,6 +3,12 @@ import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
 export async function middleware(req: NextRequest) {
+  // Block direct access to /register for all users and redirect to login page
+  if (req.nextUrl.pathname === '/register') {
+    const loginUrl = new URL('/', req.url);
+    return NextResponse.redirect(loginUrl);
+  }
+
   const { pathname } = req.nextUrl;
 
   if (
