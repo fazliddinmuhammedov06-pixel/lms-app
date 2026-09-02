@@ -3,12 +3,6 @@ import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
 export async function middleware(req: NextRequest) {
-  // Block direct access to /register for all users and redirect to login page
-  if (req.nextUrl.pathname === '/register') {
-    const loginUrl = new URL('/', req.url);
-    return NextResponse.redirect(loginUrl);
-  }
-
   const { pathname } = req.nextUrl;
 
   if (
@@ -32,7 +26,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if ((pathname === '/' || pathname === '/register') && token) {
+  if (pathname === '/' && token) {
     const userRole = (token.role as string) ?? 'PARENT';
     let targetRoute = '/student';
     if (userRole === 'DIRECTOR') targetRoute = '/director';
