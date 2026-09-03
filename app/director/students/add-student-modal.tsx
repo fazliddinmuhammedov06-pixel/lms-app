@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 export function AddStudentModal({ groups, onClose }: { groups: any[]; onClose: () => void }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ name: '', parentName: '', parentPhone: '', groupId: '' });
+  const [form, setForm] = useState({ name: '', parentName: '', parentPhone: '', parentPassword: '', groupId: '' });
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +46,10 @@ export function AddStudentModal({ groups, onClose }: { groups: any[]; onClose: (
           <div>
             <label className="block text-slate-300 mb-1 font-medium">Телефон Родителя *</label>
             <input type="text" required value={form.parentPhone} onChange={(e) => setForm({ ...form, parentPhone: e.target.value })} placeholder="+998901234567" className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none" />
+          </div>
+          <div>
+            <label className="block text-slate-300 mb-1 font-medium">Пароль Родителя</label>
+            <input type="password" value={form.parentPassword} onChange={(e) => setForm({ ...form, parentPassword: e.target.value })} placeholder="По умолчанию: 123456" className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none" />
           </div>
           <div>
             <label className="block text-slate-300 mb-1 font-medium">Группа</label>

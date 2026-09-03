@@ -2,11 +2,11 @@ import NextAuth from 'next-auth';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import Credentials from 'next-auth/providers/credentials';
 import { prisma } from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
 
-  // JWT стратегия — не храним сессии в БД, быстрее и проще для старта
   session: { strategy: 'jwt' },
 
   pages: {
@@ -15,56 +15,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
   providers: [
     Credentials({
-      id: 'phone-otp',
-      name: 'Phone OTP',
+      id: 'credentials',
+      name: 'Credentials',
       credentials: {
         phone: { label: 'Phone', type: 'text' },
-        otp: { label: 'OTP', type: 'text' },
+        password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
         const phone = (credentials?.phone as string | undefined)?.trim();
-        const otp = (credentials?.otp as string | undefined)?.trim();
+        const password = credentials?.password as string | undefined;
 
-        if (!phone || !otp) return null;
+        if (!phone || !password) return null;
 
-        // Универсальный мастер-код "123456" для тестирования
-        const isMasterDevCode = otp === '123456';
-
-        if (!isMasterDevCode) {
-          // Проверяем OTP в БД
-          const record = await prisma.otpCode.findFirst({
-            where: {
-              phone,
-              code: otp,
-              used: false,
-            },
-            orderBy: { createdAt: 'desc' },
-          });
-
-          if (!record) {
-            console.error(`[Auth Error] OTP record not found or already used for phone: ${phone}`);
-            return null;
-          }
-
-          // Проверяем срок действия
-          const expiresTime = new Date(record.expiresAt).getTime();
-          if (expiresTime < Date.now()) {
-            console.error(`[Auth Error] OTP expired for phone: ${phone}. Expired at: ${record.expiresAt}`);
-            return null;
-          }
-
-          // Помечаем OTP как использованный
-          await prisma.otpCode.update({
-            where: { id: record.id },
-            data: { used: true },
-          });
-        }
-
-        // Ищем пользователя
         const user = await prisma.user.findUnique({ where: { phone } });
-        if (!user) {
-          console.error(`[Auth Error] User not found for phone: ${phone}`);
-          return null;
+        if (!user) return null;
+
+        // Проверяем пароль через bcrypt, если passwordHash установлен
+        if (user.passwordHash) {
+          const isValid = await bcrypt.compare(password, user.passwordHash);
+          if (!isValid) return null;
+        } else {
+          // Если у существующего пользователя еще нет passwordHash, сверяем со стандартным "123456"
+          if (password !== '123456') return null;
         }
 
         return {
@@ -79,7 +51,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
 
   callbacks: {
-    // Добавляем role и phone в JWT токен
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
@@ -89,7 +60,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token;
     },
 
-    // Передаём role и phone в session.user
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
@@ -100,3 +70,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 });
+

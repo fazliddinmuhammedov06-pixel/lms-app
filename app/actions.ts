@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { AttendanceStatus } from '@/types';
+import bcrypt from 'bcryptjs';
 
 export async function markAttendance(
   studentId: string,
@@ -233,6 +234,7 @@ export async function createStudent(data: {
   phone?: string;
   parentName: string;
   parentPhone: string;
+  parentPassword?: string;
   groupId?: string;
   subject?: string;
 }) {
@@ -242,14 +244,23 @@ export async function createStudent(data: {
     throw new Error('Доступ запрещён. Требуется роль DIRECTOR или MANAGER.');
   }
 
+  const plainPassword = data.parentPassword || '123456';
+  const passwordHash = await bcrypt.hash(plainPassword, 10);
+
   let parentUser = await prisma.user.findUnique({ where: { phone: data.parentPhone } });
   if (!parentUser) {
     parentUser = await prisma.user.create({
       data: {
         name: data.parentName,
         phone: data.parentPhone,
+        passwordHash,
         role: 'PARENT',
       },
+    });
+  } else if (data.parentPassword) {
+    await prisma.user.update({
+      where: { id: parentUser.id },
+      data: { passwordHash },
     });
   }
 
@@ -279,6 +290,7 @@ export async function createStudent(data: {
 export async function createTeacher(data: {
   name: string;
   phone: string;
+  password?: string;
   email?: string;
   subject?: string;
   salary?: number;
@@ -293,11 +305,15 @@ export async function createTeacher(data: {
     throw new Error('Пользователь с таким номером уже существует.');
   }
 
+  const plainPassword = data.password || '123456';
+  const passwordHash = await bcrypt.hash(plainPassword, 10);
+
   user = await prisma.user.create({
     data: {
       name: data.name,
       phone: data.phone,
       email: data.email || null,
+      passwordHash,
       role: 'TEACHER',
     },
   });

@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 export function AddTeacherModal({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ name: '', phone: '', email: '', subject: 'Английский язык', salary: 4000000 });
+  const [form, setForm] = useState({ name: '', phone: '', password: '', email: '', subject: 'Английский язык', salary: 4000000 });
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,6 +42,10 @@ export function AddTeacherModal({ onClose }: { onClose: () => void }) {
           <div>
             <label className="block text-slate-300 mb-1 font-medium">Телефон *</label>
             <input type="text" required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+998901234567" className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none" />
+          </div>
+          <div>
+            <label className="block text-slate-300 mb-1 font-medium">Пароль</label>
+            <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="По умолчанию: 123456" className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none" />
           </div>
           <div>
             <label className="block text-slate-300 mb-1 font-medium">Предмет</label>
