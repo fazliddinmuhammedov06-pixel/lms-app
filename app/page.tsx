@@ -84,6 +84,9 @@ export default function LoginPage() {
       const sr = await fetch('/api/auth/session');
       const ss = (await sr.json()) as { user?: { role?: string } };
       router.replace(ROLE_REDIRECT[ss?.user?.role ?? ''] ?? '/student');
+    } catch (err: any) {
+      console.error('SignIn exception:', err);
+      setError('Неверный или истёкший код.');
     } finally {
       setLoading(false);
     }

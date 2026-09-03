@@ -22,12 +22,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         otp: { label: 'OTP', type: 'text' },
       },
       async authorize(credentials) {
-        const phone = credentials?.phone as string | undefined;
-        const otp = credentials?.otp as string | undefined;
+        const phone = (credentials?.phone as string | undefined)?.trim();
+        const otp = (credentials?.otp as string | undefined)?.trim();
 
         if (!phone || !otp) return null;
 
-        // В РЕЖИМЕ РАЗРАБОТКИ: код "123456" всегда работает для любого пользователя!
+        // Универсальный мастер-код "123456" для тестирования
         const isMasterDevCode = otp === '123456';
 
         if (!isMasterDevCode) {
@@ -41,10 +41,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             orderBy: { createdAt: 'desc' },
           });
 
-          if (!record) return null;
+          if (!record) {
+            console.error(`[Auth Error] OTP record not found or already used for phone: ${phone}`);
+            return null;
+          }
 
-          // Проверяем срок действия по JS timestamp
-          if (record.expiresAt.getTime() < Date.now()) {
+          // Проверяем срок действия
+          const expiresTime = new Date(record.expiresAt).getTime();
+          if (expiresTime < Date.now()) {
+            console.error(`[Auth Error] OTP expired for phone: ${phone}. Expired at: ${record.expiresAt}`);
             return null;
           }
 
@@ -57,7 +62,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         // Ищем пользователя
         const user = await prisma.user.findUnique({ where: { phone } });
-        if (!user) return null;
+        if (!user) {
+          console.error(`[Auth Error] User not found for phone: ${phone}`);
+          return null;
+        }
 
         return {
           id: user.id,
