@@ -9,14 +9,16 @@ import { CustomSelect } from '@/components/ui/custom-select';
 import { createDiscountRequest } from '@/app/actions';
 import { useRouter } from 'next/navigation';
 
-export default function StudentClient({ initialStudents }: any) {
+export default function StudentClient({ initialStudents }: { initialStudents: any[] }) {
   const router = useRouter();
-  const [selectedId, setSelectedId] = useState(initialStudents[0]?.id || '');
+  const [selectedId, setSelectedId] = useState(initialStudents?.[0]?.id || '');
   const [loading, setLoading] = useState(false);
-  const student = initialStudents.find((s: any) => s.id === selectedId);
+  const student = initialStudents?.find((s: any) => s.id === selectedId) || initialStudents?.[0];
   if (!student) return <div className="text-white p-4">Нет учеников</div>;
-  const lvl = getStudentLevel(student.totalStars, student.currentBalance);
+  const lvl = getStudentLevel(student.totalStars || 0, student.currentBalance || 0);
   const rewards = [{ id: 'r1', name: 'Скидка 5%', pct: 5, cost: 250 }, { id: 'r2', name: 'Скидка 10%', pct: 10, cost: 450 }];
+  const absences = student.absences || [];
+  const transactions = student.transactions || [];
 
   const handleRedeem = async (r: any) => {
     if (student.currentBalance < r.cost) return toast.error('Недостаточно звезд');
@@ -63,9 +65,9 @@ export default function StudentClient({ initialStudents }: any) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-[#1e293b] p-3 border border-slate-800">
             <h2 className="font-bold mb-2 flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5 text-rose-400" /> Пропуски</h2>
-            {student.absences.length === 0 ? <p className="text-slate-400">Пропусков нет! 🎉</p> : (
+            {absences.length === 0 ? <p className="text-slate-400">Пропусков нет! 🎉</p> : (
               <div className="space-y-1">
-                {student.absences.map((ab: any, idx: number) => (
+                {absences.map((ab: any, idx: number) => (
                   <div key={idx} className="bg-[#0f172a] p-2 border border-slate-800 flex justify-between text-[11px]">{ab.groupName} <span className="text-rose-400 font-bold">{ab.date}</span></div>
                 ))}
               </div>
@@ -73,9 +75,9 @@ export default function StudentClient({ initialStudents }: any) {
           </div>
           <div className="bg-[#1e293b] p-3 border border-slate-800">
             <h2 className="font-bold mb-2 flex items-center gap-1"><Star className="w-3.5 h-3.5 text-orange-400" /> История звёзд</h2>
-            {student.transactions.length === 0 ? <p className="text-slate-400">История пуста</p> : (
+            {transactions.length === 0 ? <p className="text-slate-400">История пуста</p> : (
               <div className="space-y-1 max-h-[120px] overflow-y-auto pr-1">
-                {student.transactions.map((t: any) => (
+                {transactions.map((t: any) => (
                   <div key={t.id} className="bg-[#0f172a] p-1 border border-slate-800 flex justify-between items-center text-[10px]">
                     <div><p className="font-bold text-slate-200">{t.reason}</p><p className="text-[9px] text-slate-500">{t.date}</p></div>
                     <span className={`font-bold ${t.amount > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{t.amount > 0 ? `+${t.amount}` : t.amount}</span>

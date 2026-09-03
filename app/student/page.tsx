@@ -6,18 +6,29 @@ import StudentClient from './student-client';
 
 export default async function StudentPageServer() {
   const session = await auth();
-  if (!session || (session.user as any)?.role !== 'PARENT') {
+  if (!session) {
     redirect('/');
   }
 
-  // Находим родителя и привязанных учеников с их группами, транзакциями звезд и пропусками
+  const role = (session.user as any)?.role;
+  if (role !== 'PARENT' && role !== 'STUDENT') {
+    redirect('/');
+  }
+
+  const userId = (session.user as any).id;
+  const userPhone = (session.user as any).phone;
+
+  let studentsData: any[] = [];
+
   const parent = await prisma.parent.findUnique({
-    where: { userId: (session.user as any).id },
+    where: { userId },
     include: {
       students: {
         include: {
           group: true,
-          starTransactions: true,
+          starTransactions: {
+            orderBy: { createdAt: 'desc' },
+          },
           attendanceRecords: {
             where: { status: 'ABSENT' },
             include: {
@@ -34,19 +45,52 @@ export default async function StudentPageServer() {
     },
   });
 
-  if (!parent || parent.students.length === 0) {
+  if (parent && parent.students.length > 0) {
+    studentsData = parent.students;
+  } else if (userPhone) {
+    const dbStudents = await prisma.student.findMany({
+      where: { phone: userPhone },
+      include: {
+        group: true,
+        starTransactions: {
+          orderBy: { createdAt: 'desc' },
+        },
+        attendanceRecords: {
+          where: { status: 'ABSENT' },
+          include: {
+            lesson: {
+              include: {
+                group: true,
+              },
+            },
+          },
+          orderBy: { date: 'desc' },
+        },
+      },
+    });
+    studentsData = dbStudents;
+  }
+
+  if (!studentsData || studentsData.length === 0) {
     return (
-      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center text-white">
-        <p>Кабинет ученика пуст. Пожалуйста, обратитесь к администрации для привязки вашего ребёнка к вашему аккаунту.</p>
+      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center text-white p-4 text-center">
+        <p>Кабинет ученика пуст. Пожалуйста, обратитесь к администрации для привязки вашего аккаунта.</p>
       </div>
     );
   }
 
-  const initialStudents = parent.students.map((st) => {
-    const totalStars = calculateTotalStarsEarned(st.starTransactions);
-    const absences = st.attendanceRecords.map((ab) => ({
+  const initialStudents = studentsData.map((st) => {
+    const totalStars = calculateTotalStarsEarned(st.starTransactions || []);
+    const absences = (st.attendanceRecords || []).map((ab: any) => ({
       date: new Date(ab.date).toLocaleDateString('ru-RU'),
       groupName: ab.lesson?.group?.name || 'Удаленная группа',
+    }));
+
+    const transactions = (st.starTransactions || []).map((t: any) => ({
+      id: t.id,
+      reason: t.reason || 'Начисление звёзд',
+      amount: t.amount,
+      date: new Date(t.createdAt).toLocaleDateString('ru-RU'),
     }));
 
     return {
@@ -55,6 +99,7 @@ export default async function StudentPageServer() {
       currentBalance: st.stars,
       totalStars,
       absences,
+      transactions,
     };
   });
 

@@ -7,7 +7,9 @@ import { Phone, Lock, ArrowRight, Loader2 } from 'lucide-react';
 
 const ROLE_REDIRECT: Record<string, string> = {
   DIRECTOR: '/director',
+  MANAGER: '/manager',
   TEACHER: '/teacher',
+  STUDENT: '/student',
   PARENT: '/student',
 };
 

@@ -56,7 +56,7 @@ export async function middleware(req: NextRequest) {
     else if (userRole === 'MANAGER') targetRoute = '/manager';
     else if (userRole === 'TEACHER') targetRoute = '/teacher';
     else if (userRole === 'STUDENT') targetRoute = '/student';
-    else if (userRole === 'PARENT') targetRoute = '/parent';
+    else if (userRole === 'PARENT') targetRoute = '/student';
 
     return NextResponse.redirect(new URL(targetRoute, req.url));
   }
