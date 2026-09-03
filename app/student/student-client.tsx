@@ -35,7 +35,7 @@ export default function StudentClient({ initialStudents }: { initialStudents: an
     <div className="min-h-screen bg-[#0f172a] p-4 text-[#f8fafc] text-xs">
       <div className="max-w-4xl mx-auto space-y-4">
         <div className="flex justify-between items-center bg-[#1e293b]/45 p-3 border border-slate-800">
-          <div className="flex items-center gap-2"><Award className="w-8 h-8 text-purple-400" /><div><h1 className="font-bold text-sm">Кабинет ученика</h1><p className="text-[10px] text-slate-400">Friday Education</p></div></div>
+          <div className="flex items-center gap-2"><img src="/logo-star.png" alt="Logo" className="w-8 h-8 object-contain" /><div><h1 className="font-bold text-sm">Кабинет ученика</h1><p className="text-[10px] text-slate-400">Friday Education</p></div></div>
           {initialStudents.length > 1 && <CustomSelect value={selectedId} onChange={(val: string | null) => val && setSelectedId(val)} options={initialStudents.map((s: any) => ({ value: s.id, label: s.name }))} className="w-[150px] text-slate-900" />}
         </div>
         <div className="bg-[#1e293b] p-4 border border-slate-800 space-y-3">

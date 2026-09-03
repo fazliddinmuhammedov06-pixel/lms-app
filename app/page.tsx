@@ -60,9 +60,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[#0f172a] flex flex-col items-center justify-center px-4">
       <div className="mb-8 text-center">
         <div className="flex items-center justify-center gap-2 mb-2">
-          <div className="w-8 h-8 bg-orange-500 flex items-center justify-center font-bold text-white text-sm">
-            F
-          </div>
+          <img src="/logo-star.png" alt="Logo" className="w-8 h-8 object-contain" />
           <span className="text-white text-xl font-bold tracking-wide">Friday Education</span>
         </div>
         <p className="text-slate-400 text-sm">Система управления учебным центром</p>

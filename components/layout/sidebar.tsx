@@ -24,9 +24,7 @@ export function Sidebar({ role, userName, userPhone, unreadCount = 0 }: SidebarP
     <div className="flex flex-col h-full bg-[#0f172a] border-r border-slate-800 text-slate-300 w-64">
       <div className="p-4 flex items-center justify-between border-b border-slate-800">
         <Link href={`/${role.toLowerCase()}`} className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center font-black text-white text-base">
-            F
-          </div>
+          <img src="/logo-star.png" alt="Logo" className="w-8 h-8 object-contain" />
           <div>
             <span className="text-white font-bold text-base tracking-wide block leading-tight">FRIDAY</span>
             <span className="text-[10px] text-orange-400 font-semibold tracking-wider uppercase block">EDUCATION LMS</span>
@@ -97,7 +95,7 @@ export function Sidebar({ role, userName, userPhone, unreadCount = 0 }: SidebarP
             <Menu className="w-5 h-5" />
           </button>
           <span className="font-bold text-sm text-white flex items-center gap-1.5">
-            <span className="w-6 h-6 bg-orange-500 rounded flex items-center justify-center text-xs text-white">F</span>
+            <img src="/logo-star.png" alt="Logo" className="w-6 h-6 object-contain" />
             Friday LMS
           </span>
         </div>
