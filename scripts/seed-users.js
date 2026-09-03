@@ -1,7 +1,12 @@
 const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcryptjs');
+
 const prisma = new PrismaClient();
 
 async function main() {
+  const plainPassword = '123456';
+  const passwordHash = await bcrypt.hash(plainPassword, 10);
+
   const users = [
     {
       phone: '+998901234567',
@@ -23,8 +28,17 @@ async function main() {
   for (const u of users) {
     const user = await prisma.user.upsert({
       where: { phone: u.phone },
-      update: { role: u.role, name: u.name },
-      create: { phone: u.phone, name: u.name, role: u.role },
+      update: {
+        role: u.role,
+        name: u.name,
+        passwordHash: passwordHash,
+      },
+      create: {
+        phone: u.phone,
+        name: u.name,
+        role: u.role,
+        passwordHash: passwordHash,
+      },
     });
 
     if (u.role === 'TEACHER') {
@@ -42,7 +56,7 @@ async function main() {
     }
   }
 
-  console.log('✅ Тестовые аккаунты успешно созданы!');
+  console.log('✅ Тестовые аккаунты успешно созданы/обновлены!');
 }
 
 main()

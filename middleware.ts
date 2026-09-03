@@ -13,10 +13,33 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = await getToken({
+  const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+
+  // Автоматическое определение имени куки для NextAuth v5 (authjs.session-token / __Secure-authjs.session-token)
+  // и NextAuth v4 (next-auth.session-token / __Secure-next-auth.session-token)
+  const cookieName =
+    req.cookies.get('__Secure-authjs.session-token')?.value
+      ? '__Secure-authjs.session-token'
+      : req.cookies.get('authjs.session-token')?.value
+      ? 'authjs.session-token'
+      : req.cookies.get('__Secure-next-auth.session-token')?.value
+      ? '__Secure-next-auth.session-token'
+      : 'next-auth.session-token';
+
+  let token = await getToken({
     req,
-    secret: process.env.AUTH_SECRET,
+    secret,
+    cookieName,
+    salt: cookieName,
   });
+
+  // Запасной поиск токена дефолтным getToken, если указанный выше salt/cookieName не сработал
+  if (!token) {
+    token = await getToken({
+      req,
+      secret,
+    });
+  }
 
   const protectedPrefixes = ['/director', '/manager', '/teacher', '/student', '/parent'];
   const isProtected = protectedPrefixes.some((p) => pathname.startsWith(p));
