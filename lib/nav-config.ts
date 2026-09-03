@@ -1,7 +1,7 @@
 import {
   Home, Users, GraduationCap, Calendar, CheckSquare,
   DollarSign, FileText, BookOpen, Award, BarChart3,
-  Bell, Settings, Star, ShoppingBag, TrendingUp, CreditCard, Building
+  Bell, Settings, Star, ShoppingBag, TrendingUp, CreditCard, Building, Trophy
 } from 'lucide-react';
 
 export interface NavItem {
@@ -48,6 +48,7 @@ export const ROLE_NAV_ITEMS: Record<string, NavItem[]> = {
   ],
   STUDENT: [
     { name: 'Главная', href: '/student', icon: Home },
+    { name: 'Рейтинг', href: '/student/rating', icon: Trophy },
     { name: 'Расписание', href: '/student/schedule', icon: Calendar },
     { name: 'Домашки', href: '/student/homework', icon: BookOpen },
     { name: 'Оценки', href: '/student/grades', icon: Star },

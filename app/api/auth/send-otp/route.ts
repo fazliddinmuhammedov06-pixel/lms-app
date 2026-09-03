@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateOtp } from '@/lib/otp';
+import { generateOtp, sendSmsViaProvider } from '@/lib/otp';
 
 const PHONE_REGEX = /^\+998\d{9}$/;
 
@@ -16,10 +16,7 @@ export async function POST(req: NextRequest) {
     }
 
     const code = await generateOtp(phone);
-
-    // ─── DEV: выводим код в консоль вместо реального SMS ────────────────────
-    console.log(`\n📱 OTP для ${phone}: ${code} (или универсальный код: 123456)\n`);
-    // ─── PROD: здесь подключить SMS-провайдер (например Eskiz, Twilio) ───────
+    await sendSmsViaProvider(phone, code);
 
     return NextResponse.json({ success: true, message: 'Код отправлен' });
   } catch (err) {

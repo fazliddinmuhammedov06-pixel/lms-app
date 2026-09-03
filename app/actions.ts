@@ -97,6 +97,7 @@ export async function addStars(studentId: string, amount: number, reason: string
 
   revalidatePath('/teacher');
   revalidatePath('/student');
+  revalidatePath('/student/rating');
   return { success: true, balance: updatedStudent.stars, transaction };
 }
 

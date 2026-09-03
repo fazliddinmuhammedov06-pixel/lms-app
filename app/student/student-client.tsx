@@ -1,13 +1,14 @@
 'use client';
 import { useState } from 'react';
 import { getStudentLevel } from '@/lib/levels';
-import { Award, Star, Gift, AlertTriangle } from 'lucide-react';
+import { Award, Star, Gift, AlertTriangle, Trophy, TrendingUp, TrendingDown, Minus, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { Avatar } from '@/components/ui/avatar';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { CustomSelect } from '@/components/ui/custom-select';
 import { createDiscountRequest } from '@/app/actions';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function StudentClient({ initialStudents }: { initialStudents: any[] }) {
   const router = useRouter();
@@ -16,6 +17,7 @@ export default function StudentClient({ initialStudents }: { initialStudents: an
   const student = initialStudents?.find((s: any) => s.id === selectedId) || initialStudents?.[0];
   if (!student) return <div className="text-white p-4">Нет учеников</div>;
   const lvl = getStudentLevel(student.totalStars || 0, student.currentBalance || 0);
+  const rating = student.ratingInfo;
   const rewards = [{ id: 'r1', name: 'Скидка 5%', pct: 5, cost: 250 }, { id: 'r2', name: 'Скидка 10%', pct: 10, cost: 450 }];
   const absences = student.absences || [];
   const transactions = student.transactions || [];
@@ -29,6 +31,12 @@ export default function StudentClient({ initialStudents }: { initialStudents: an
       router.refresh();
     } catch (err: any) { toast.error(err.message || 'Ошибка'); }
     finally { setLoading(false); }
+  };
+
+  const renderDynamics = (c: number) => {
+    if (c > 0) return <span className="text-emerald-400 font-bold flex items-center gap-0.5"><TrendingUp className="w-3 h-3"/> ↑ +{c} поз. за неделю</span>;
+    if (c < 0) return <span className="text-rose-400 font-bold flex items-center gap-0.5"><TrendingDown className="w-3 h-3"/> ↓ {c} поз. за неделю</span>;
+    return <span className="text-slate-400 flex items-center gap-0.5"><Minus className="w-3 h-3"/> — без изменений</span>;
   };
 
   return (
@@ -45,6 +53,34 @@ export default function StudentClient({ initialStudents }: { initialStudents: an
           </div>
           <ProgressBar value={lvl.progressPercent} className="h-1.5" />
         </div>
+
+        {rating && (
+          <div className="bg-[#1e293b] p-3.5 border border-slate-800 space-y-2">
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold text-sm flex items-center gap-1.5"><Trophy className="w-4 h-4 text-orange-400" /> Мой рейтинг</h2>
+              <Link href={`/student/rating?studentId=${student.id}`} className="text-orange-400 font-semibold hover:underline flex items-center gap-0.5 text-[11px]">
+                Весь рейтинг <ChevronRight className="w-3 h-3" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-3 gap-2 bg-[#0f172a] p-2 border border-slate-800 text-center">
+              <div>
+                <span className="text-[10px] text-slate-400 block">Место</span>
+                <span className="font-bold text-white text-xs">🏆 #{rating.rank}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400 block">Звёзды</span>
+                <span className="font-bold text-orange-400 text-xs">⭐ {rating.stars}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400 block">До #{rating.nextRankNumber || 1}</span>
+                <span className="font-bold text-slate-200 text-xs">{rating.rank === 1 ? '🥇 Top 1' : `${rating.starsToNextRank} ⭐`}</span>
+              </div>
+            </div>
+            <div className="text-[10px]">
+              {renderDynamics(rating.change)}
+            </div>
+          </div>
+        )}
         <div className="bg-[#1e293b] p-4 border border-slate-800">
           <h2 className="font-bold mb-3 flex items-center gap-1 text-sm"><Gift className="w-3.5 h-3.5 text-orange-400" /> Награды</h2>
           <div className="grid grid-cols-2 gap-3">
