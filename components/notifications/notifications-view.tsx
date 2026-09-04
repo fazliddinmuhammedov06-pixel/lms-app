@@ -3,41 +3,44 @@
 import React, { useState } from 'react';
 import { AppLayout } from '@/components/layout/app-layout';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Bell, CheckCircle2, Clock } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { markNotificationRead } from '@/app/actions';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 export function NotificationsView({
   role, userName, userPhone, unreadCount, notifications,
 }: any) {
   const router = useRouter();
+  const t = useTranslations('notifications');
+  const tCommon = useTranslations('common');
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const handleMarkRead = async (id: string) => {
     setLoadingId(id);
     try {
       await markNotificationRead(id);
-      toast.success('Отмечено как прочитанное');
+      toast.success(tCommon('saved'));
       router.refresh();
     } catch (err: any) {
-      toast.error(err.message || 'Ошибка');
+      toast.error(err.message || tCommon('error'));
     } finally {
       setLoadingId(null);
     }
   };
 
   return (
-    <AppLayout role={role} userName={userName} userPhone={userPhone} unreadCount={unreadCount} title="Уведомления">
+    <AppLayout role={role} userName={userName} userPhone={userPhone} unreadCount={unreadCount} title={t('title')}>
       <div className="bg-[#1e293b] p-5 border border-slate-800 rounded-lg space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <Bell className="w-5 h-5 text-orange-400" /> Центр уведомлений
+            <Bell className="w-5 h-5 text-orange-400" /> {t('center')}
           </h2>
         </div>
 
         {notifications.length === 0 ? (
-          <EmptyState icon={Bell} title="Нет новых уведомлений" description="Все системные оповещения появятся здесь." />
+          <EmptyState icon={Bell} title={t('empty')} description={t('emptyDesc')} />
         ) : (
           <div className="space-y-2">
             {notifications.map((n: any) => (
@@ -62,7 +65,7 @@ export function NotificationsView({
                     disabled={loadingId === n.id}
                     className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded text-xs font-semibold shrink-0 cursor-pointer"
                   >
-                    Прочитано
+                    {t('markAsRead')}
                   </button>
                 )}
               </div>

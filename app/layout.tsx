@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { ClientAppListeners } from '@/components/client-app-listeners';
+import { LanguageProvider } from '@/components/i18n-provider';
 import './globals.css';
 
 const geistSans = Geist({
@@ -44,9 +45,11 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[#0f172a]">
-        <ClientAppListeners />
-        {children}
-        <Toaster position="top-right" theme="dark" richColors closeButton />
+        <LanguageProvider>
+          <ClientAppListeners />
+          {children}
+          <Toaster position="top-right" theme="dark" richColors closeButton />
+        </LanguageProvider>
       </body>
     </html>
   );
