@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { calculateTotalStarsEarned } from '@/lib/levels';
 import { getLeaderboardData } from '@/lib/rating';
+import { AppLayout } from '@/components/layout/app-layout';
 import StudentClient from './student-client';
 
 export default async function StudentPageServer() {
@@ -17,6 +18,7 @@ export default async function StudentPageServer() {
   }
 
   const userId = (session.user as any).id;
+  const userName = (session.user as any).name || 'Студент';
   const userPhone = (session.user as any).phone;
 
   let studentsData: any[] = [];
@@ -72,11 +74,17 @@ export default async function StudentPageServer() {
     studentsData = dbStudents;
   }
 
+  const unreadCount = await prisma.notification.count({
+    where: { userId, read: false },
+  });
+
   if (!studentsData || studentsData.length === 0) {
     return (
-      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center text-white p-4 text-center">
-        <p>Кабинет ученика пуст. Пожалуйста, обратитесь к администрации для привязки вашего аккаунта.</p>
-      </div>
+      <AppLayout role={role} userName={userName} userPhone={userPhone} unreadCount={unreadCount} title="Мой Профиль">
+        <div className="flex items-center justify-center text-white p-4 text-center">
+          <p>Кабинет ученика пуст. Пожалуйста, обратитесь к администрации для привязки вашего аккаунта.</p>
+        </div>
+      </AppLayout>
     );
   }
 
@@ -109,6 +117,10 @@ export default async function StudentPageServer() {
     })
   );
 
-  return <StudentClient initialStudents={initialStudents} />;
+  return (
+    <AppLayout role={role} userName={userName} userPhone={userPhone} unreadCount={unreadCount} title="Главная">
+      <StudentClient initialStudents={initialStudents} />
+    </AppLayout>
+  );
 }
 

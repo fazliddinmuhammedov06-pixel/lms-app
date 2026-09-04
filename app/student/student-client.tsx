@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 import { Avatar } from '@/components/ui/avatar';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { CustomSelect } from '@/components/ui/custom-select';
-import { LanguageSwitcher } from '@/components/language-switcher';
 import { createDiscountRequest } from '@/app/actions';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -47,15 +46,13 @@ export default function StudentClient({ initialStudents }: { initialStudents: an
   };
 
   return (
-    <div className="min-h-screen bg-[#0f172a] p-4 text-[#f8fafc] text-xs">
-      <div className="max-w-4xl mx-auto space-y-4">
-        <div className="flex justify-between items-center bg-[#1e293b]/45 p-3 border border-slate-800">
-          <div className="flex items-center gap-2"><img src="/logo-star.png" alt="Logo" className="w-8 h-8 object-contain" /><div><h1 className="font-bold text-sm">{t('dashboard')}</h1><p className="text-[10px] text-slate-400">{tCommon('appName')}</p></div></div>
-          <div className="flex items-center gap-2">
-            <LanguageSwitcher variant="compact" />
-            {initialStudents.length > 1 && <CustomSelect value={selectedId} onChange={(val: string | null) => val && setSelectedId(val)} options={initialStudents.map((s: any) => ({ value: s.id, label: s.name }))} className="w-[150px] text-slate-900" />}
-          </div>
+    <div className="space-y-4 text-xs">
+      {initialStudents.length > 1 && (
+        <div className="flex items-center justify-between bg-[#1e293b] p-2.5 border border-slate-800">
+          <span className="text-slate-300">{t('selectStudent')}</span>
+          <CustomSelect value={selectedId} onChange={(val: string | null) => val && setSelectedId(val)} options={initialStudents.map((s: any) => ({ value: s.id, label: s.name }))} className="w-[150px] text-slate-900" />
         </div>
+      )}
         <div className="bg-[#1e293b] p-4 border border-slate-800 space-y-3">
           <div className="flex justify-between items-center pb-2 border-b border-slate-800">
             <div className="flex items-center gap-2"><Avatar name={student.name} size={36} /><div><h2 className="font-bold text-sm">{student.name}</h2><p className="text-[10px] text-orange-400">{t('level')} {lvl.level}: {lvl.levelName}</p></div></div>
@@ -132,7 +129,6 @@ export default function StudentClient({ initialStudents }: { initialStudents: an
               </div>
             )}
           </div>
-        </div>
       </div>
     </div>
   );
