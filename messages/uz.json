@@ -63,7 +63,22 @@
     "rewardStore": "Mukofotlar do'koni",
     "myGroups": "Guruhlarim",
     "myStudents": "O'quvchilarim",
-    "children": "Farzandlar"
+    "children": "Farzandlar",
+    "grades": "Baholar"
+  },
+  "teacher": {
+    "dashboard": "O'qituvchi paneli",
+    "selectGroup": "Guruhni tanlang",
+    "studentsCount": "O'quvchilar: {count}",
+    "today": "Bugun",
+    "present": "Kelgan",
+    "absent": "Yo'q",
+    "late": "Kechikkan",
+    "totalStars": "Jami yulduzlar",
+    "balance": "Balans",
+    "noGroups": "Sizda hali guruhlar yo'q",
+    "noLessonsToday": "Bugun ushbu guruhda dars yo'q",
+    "attendanceSaved": "Davomat saqlandi"
   },
   "director": {
     "dashboard": "Direktor paneli",

@@ -63,7 +63,22 @@
     "rewardStore": "Магазин наград",
     "myGroups": "Мои группы",
     "myStudents": "Мои ученики",
-    "children": "Дети"
+    "children": "Дети",
+    "grades": "Оценки"
+  },
+  "teacher": {
+    "dashboard": "Панель Учителя",
+    "selectGroup": "Выберите группу",
+    "studentsCount": "Учеников: {count}",
+    "today": "Сегодня",
+    "present": "Был",
+    "absent": "Отсутствует",
+    "late": "Опоздал",
+    "totalStars": "Всего звёзд",
+    "balance": "Баланс",
+    "noGroups": "У вас пока нет групп",
+    "noLessonsToday": "Нет уроков в этой группе на сегодня",
+    "attendanceSaved": "Посещаемость сохранена"
   },
   "director": {
     "dashboard": "Панель Директора",
