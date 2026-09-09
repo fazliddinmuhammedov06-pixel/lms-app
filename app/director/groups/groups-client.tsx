@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { AppLayout } from '@/components/layout/app-layout';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Building, Plus, Search, Users, Calendar } from 'lucide-react';
@@ -46,7 +47,7 @@ export default function GroupsClient({
           </div>
         ) : (
           filtered.map((g: any) => (
-            <div key={g.id} className="bg-[#1e293b] p-4 border border-slate-800 rounded-lg space-y-3">
+            <Link key={g.id} href={`/${role.toLowerCase()}/groups/${g.id}`} className="bg-[#1e293b] p-4 border border-slate-800 rounded-lg space-y-3 hover:border-orange-500/30 transition-colors cursor-pointer block">
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="font-bold text-white text-sm">{g.name}</h3>
@@ -75,7 +76,7 @@ export default function GroupsClient({
                   <span className="font-bold text-white">{g.lessonsCount} занятий</span>
                 </div>
               </div>
-            </div>
+            </Link>
           ))
         )}
       </div>
