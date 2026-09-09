@@ -63,26 +63,52 @@ export async function markAttendance(
 
 export async function addStars(studentId: string, amount: number, reason: string) {
   const session = await auth();
-  if (!session || (session.user as any)?.role !== 'TEACHER') {
-    throw new Error('Доступ запрещён. Требуется роль TEACHER.');
+  const role = (session?.user as any)?.role;
+  
+  // Разрешено TEACHER и DIRECTOR
+  if (!session || (role !== 'TEACHER' && role !== 'DIRECTOR')) {
+    throw new Error('Доступ запрещён. Требуется роль TEACHER или DIRECTOR.');
   }
 
-  const teacher = await prisma.teacher.findUnique({
-    where: { userId: (session.user as any).id },
-  });
-  if (!teacher) {
-    throw new Error('Профиль преподавателя не найден.');
-  }
+  let teacherId: string;
 
-  // Проверяем, что studentId принадлежит группе этого учителя
-  const studentInGroup = await prisma.student.findFirst({
-    where: {
-      id: studentId,
-      group: { teacherId: teacher.id },
-    },
-  });
-  if (!studentInGroup) {
-    throw new Error('Доступ запрещён: студент не принадлежит вашим группам.');
+  if (role === 'TEACHER') {
+    const teacher = await prisma.teacher.findUnique({
+      where: { userId: (session.user as any).id },
+    });
+    if (!teacher) {
+      throw new Error('Профиль преподавателя не найден.');
+    }
+
+    // Проверяем, что studentId принадлежит группе этого учителя
+    const studentInGroup = await prisma.student.findFirst({
+      where: {
+        id: studentId,
+        group: { teacherId: teacher.id },
+      },
+    });
+    if (!studentInGroup) {
+      throw new Error('Доступ запрещён: студент не принадлежит вашим группам.');
+    }
+    teacherId = teacher.id;
+  } else {
+    // DIRECTOR может управлять Stars любого студента
+    const student = await prisma.student.findUnique({
+      where: { id: studentId },
+      include: { group: true },
+    });
+    if (!student) {
+      throw new Error('Студент не найден.');
+    }
+    
+    // Берём учителя группы студента или первого доступного
+    if (student.group?.teacherId) {
+      teacherId = student.group.teacherId;
+    } else {
+      const firstTeacher = await prisma.teacher.findFirst();
+      if (!firstTeacher) throw new Error('Учителя не найдены.');
+      teacherId = firstTeacher.id;
+    }
   }
 
   const [updatedStudent, transaction] = await prisma.$transaction([
@@ -91,14 +117,58 @@ export async function addStars(studentId: string, amount: number, reason: string
       data: { stars: { increment: amount } },
     }),
     prisma.starTransaction.create({
-      data: { studentId, amount, reason, teacherId: teacher.id },
+      data: { studentId, amount, reason, teacherId },
     }),
   ]);
 
   revalidatePath('/teacher');
+  revalidatePath('/director');
+  revalidatePath('/director/students');
   revalidatePath('/student');
   revalidatePath('/student/rating');
   return { success: true, balance: updatedStudent.stars, transaction };
+}
+
+export async function updateStudentGroup(studentId: string, groupId: string | null) {
+  const session = await auth();
+  const role = (session?.user as any)?.role;
+  
+  // Только DIRECTOR и MANAGER могут изменять группу студента
+  if (!session || (role !== 'DIRECTOR' && role !== 'MANAGER')) {
+    throw new Error('Доступ запрещён. Требуется роль DIRECTOR или MANAGER.');
+  }
+
+  // Проверяем существование студента
+  const student = await prisma.student.findUnique({
+    where: { id: studentId },
+    select: { id: true, name: true },
+  });
+  if (!student) {
+    throw new Error('Студент не найден.');
+  }
+
+  // Если groupId указан, проверяем существование группы
+  if (groupId) {
+    const group = await prisma.group.findUnique({
+      where: { id: groupId },
+      select: { id: true, name: true },
+    });
+    if (!group) {
+      throw new Error('Группа не найдена.');
+    }
+  }
+
+  // Обновляем группу студента
+  const updatedStudent = await prisma.student.update({
+    where: { id: studentId },
+    data: { groupId: groupId },
+  });
+
+  revalidatePath('/director/students');
+  revalidatePath('/director/groups');
+  revalidatePath('/manager/students');
+  revalidatePath('/teacher');
+  return { success: true, student: updatedStudent };
 }
 
 export async function createDiscountRequest(

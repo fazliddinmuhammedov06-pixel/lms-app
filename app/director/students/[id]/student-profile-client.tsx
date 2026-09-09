@@ -3,10 +3,40 @@
 import React, { useState } from 'react';
 import { AppLayout } from '@/components/layout/app-layout';
 import { Avatar } from '@/components/ui/avatar';
-import { Star } from 'lucide-react';
+import { Star, Plus, Minus } from 'lucide-react';
+import { addStars } from '@/app/actions';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
-export default function StudentProfileClient({ role, userName, userPhone, unreadCount, student }: any) {
+export default function StudentProfileClient({ role, userName, userPhone, unreadCount, student, groups }: any) {
+  const router = useRouter();
   const [tab, setTab] = useState<'overview' | 'attendance' | 'grades' | 'homework' | 'payments' | 'stars'>('overview');
+  const [loading, setLoading] = useState(false);
+  const [starsAmount, setStarsAmount] = useState(1);
+  const [starsReason, setStarsReason] = useState('');
+  const [showStarsModal, setShowStarsModal] = useState(false);
+  const [isAdding, setIsAdding] = useState(true);
+
+  const handleStarsSubmit = async () => {
+    if (!starsReason.trim()) {
+      toast.error('Укажите причину');
+      return;
+    }
+    setLoading(true);
+    try {
+      const amount = isAdding ? starsAmount : -starsAmount;
+      await addStars(student.id, amount, starsReason);
+      toast.success(`${isAdding ? '+' : ''}${amount} ⭐ успешно`);
+      setShowStarsModal(false);
+      setStarsReason('');
+      setStarsAmount(1);
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err.message || 'Ошибка');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <AppLayout role={role} userName={userName} userPhone={userPhone} unreadCount={unreadCount} title={`Профиль: ${student.name}`}>
@@ -19,9 +49,21 @@ export default function StudentProfileClient({ role, userName, userPhone, unread
             <p className="text-slate-400 text-[10px]">Группа: {student.groupName} • Родитель: {student.parentName} ({student.parentPhone})</p>
           </div>
         </div>
-        <div className="bg-[#0f172a] p-2 border border-slate-800 rounded text-right shrink-0">
-          <span className="text-[10px] text-slate-400 block">Баланс</span>
-          <span className="text-lg font-bold text-orange-400 flex items-center gap-1"><Star className="w-4 h-4 fill-orange-400" /> {student.stars} ⭐</span>
+        <div className="flex flex-col gap-2">
+          <div className="bg-[#0f172a] p-2 border border-slate-800 rounded text-right shrink-0">
+            <span className="text-[10px] text-slate-400 block">Баланс</span>
+            <span className="text-lg font-bold text-orange-400 flex items-center gap-1 justify-end"><Star className="w-4 h-4 fill-orange-400" /> {student.stars} ⭐</span>
+          </div>
+          {role === 'DIRECTOR' && (
+            <div className="flex gap-1">
+              <button onClick={() => { setIsAdding(true); setShowStarsModal(true); }} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-2 py-1 rounded flex items-center justify-center gap-1 cursor-pointer">
+                <Plus className="w-3 h-3" /> Stars
+              </button>
+              <button onClick={() => { setIsAdding(false); setShowStarsModal(true); }} className="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-2 py-1 rounded flex items-center justify-center gap-1 cursor-pointer">
+                <Minus className="w-3 h-3" /> Stars
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -94,6 +136,28 @@ export default function StudentProfileClient({ role, userName, userPhone, unread
               <span className={`font-bold ${st.amount > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{st.amount > 0 ? `+${st.amount}` : st.amount} ⭐</span>
             </div>
           ))}
+        </div>
+      )}
+
+      {showStarsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
+          <div className="bg-[#1e293b] border border-slate-800 rounded-lg w-full max-w-sm p-5 space-y-3 relative text-xs">
+            <h2 className="text-sm font-bold text-white">{isAdding ? 'Добавить Stars' : 'Отнять Stars'}</h2>
+            <div>
+              <label className="block text-slate-300 mb-1 font-medium">Количество ⭐</label>
+              <input type="number" min="1" value={starsAmount} onChange={(e) => setStarsAmount(Number(e.target.value))} className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none" />
+            </div>
+            <div>
+              <label className="block text-slate-300 mb-1 font-medium">Причина *</label>
+              <input type="text" value={starsReason} onChange={(e) => setStarsReason(e.target.value)} placeholder="За активность на уроке" className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none" />
+            </div>
+            <div className="pt-2 flex justify-end gap-2">
+              <button type="button" onClick={() => setShowStarsModal(false)} className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded font-semibold">Отмена</button>
+              <button onClick={handleStarsSubmit} disabled={loading} className={`px-3 py-1.5 text-white rounded font-bold cursor-pointer ${isAdding ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-rose-600 hover:bg-rose-500'}`}>
+                {loading ? '...' : 'Применить'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </AppLayout>

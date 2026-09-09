@@ -5,21 +5,39 @@ import Link from 'next/link';
 import { AppLayout } from '@/components/layout/app-layout';
 import { Avatar } from '@/components/ui/avatar';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Search, UserPlus, Star, Eye } from 'lucide-react';
+import { Search, UserPlus, Star, Eye, Users } from 'lucide-react';
 import { AddStudentModal } from './add-student-modal';
+import { updateStudentGroup } from '@/app/actions';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 export default function StudentsClient({
   role, userName, userPhone, unreadCount, students, groups,
 }: any) {
+  const router = useRouter();
   const [search, setSearch] = useState('');
   const [selectedGroup, setSelectedGroup] = useState('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<string | null>(null);
 
   const filtered = students.filter((st: any) => {
     const matchS = st.name.toLowerCase().includes(search.toLowerCase()) || st.parentName.toLowerCase().includes(search.toLowerCase());
     const matchG = selectedGroup === 'ALL' || st.groupId === selectedGroup;
     return matchS && matchG;
   });
+
+  const handleGroupChange = async (studentId: string, groupId: string) => {
+    setEditingStudent(studentId);
+    try {
+      await updateStudentGroup(studentId, groupId === '' ? null : groupId);
+      toast.success('Группа обновлена');
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err.message || 'Ошибка');
+    } finally {
+      setEditingStudent(null);
+    }
+  };
 
   return (
     <AppLayout role={role} userName={userName} userPhone={userPhone} unreadCount={unreadCount} title="Ученики Учебного Центра">
@@ -50,7 +68,17 @@ export default function StudentsClient({
                 {filtered.map((st: any) => (
                   <tr key={st.id} className="hover:bg-[#0f172a]/50">
                     <td className="p-3.5 flex items-center gap-3"><Avatar name={st.name} size={34} /><div><p className="font-bold text-white text-xs">{st.name}</p><p className="text-[10px] text-slate-400">{st.phone || 'Нет тел.'}</p></div></td>
-                    <td className="p-3.5"><span className="font-semibold text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded border border-orange-500/20">{st.groupName}</span></td>
+                    <td className="p-3.5">
+                      <select 
+                        value={st.groupId || ''} 
+                        onChange={(e) => handleGroupChange(st.id, e.target.value)}
+                        disabled={editingStudent === st.id}
+                        className="bg-[#0f172a] border border-slate-700 text-xs text-orange-400 px-2 py-1 rounded font-semibold"
+                      >
+                        <option value="">Без группы</option>
+                        {groups.map((g: any) => (<option key={g.id} value={g.id}>{g.name}</option>))}
+                      </select>
+                    </td>
                     <td className="p-3.5"><p className="font-semibold text-slate-200">{st.parentName}</p><p className="text-[10px] text-slate-400">{st.parentPhone}</p></td>
                     <td className="p-3.5 font-bold text-emerald-400">{st.attPercent}%</td>
                     <td className="p-3.5 font-bold text-orange-400"><span className="flex items-center gap-1"><Star className="w-3.5 h-3.5 fill-orange-400" /> {st.stars}</span></td>
