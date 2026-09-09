@@ -3,6 +3,7 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import Credentials from 'next-auth/providers/credentials';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { normalizePhone } from '@/lib/phone';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
@@ -36,13 +37,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         // Нормализация телефона (+998XXXXXXXXX)
-        const digits = rawPhone.replace(/\D/g, '');
-        let phone = rawPhone;
-        if (digits.startsWith('998')) {
-          phone = '+' + digits;
-        } else if (digits.length === 9) {
-          phone = '+998' + digits;
-        }
+        const phone = normalizePhone(rawPhone) ?? rawPhone.trim();
 
         console.log('[Auth authorize] 3. Нормализованный номер телефона:', phone);
 

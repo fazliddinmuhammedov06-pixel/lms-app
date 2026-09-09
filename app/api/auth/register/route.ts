@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { generateOtp } from '@/lib/otp';
-
-const PHONE_REGEX = /^\+998\d{9}$/;
+import { normalizePhone, isValidUzPhone } from '@/lib/phone';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json() as { phone?: string; name?: string };
-    const phone = body.phone?.trim();
+    const phone = normalizePhone(body.phone);
     const name = body.name?.trim();
 
-    if (!phone || !PHONE_REGEX.test(phone)) {
+    if (!phone || !isValidUzPhone(phone)) {
       return NextResponse.json(
         { error: 'Неверный формат номера. Используйте: +998XXXXXXXXX' },
         { status: 400 }

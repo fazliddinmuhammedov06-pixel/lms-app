@@ -45,7 +45,19 @@ export function AddStudentModal({ groups, onClose }: { groups: any[]; onClose: (
           </div>
           <div>
             <label className="block text-slate-300 mb-1 font-medium">Телефон Родителя *</label>
-            <input type="text" required value={form.parentPhone} onChange={(e) => setForm({ ...form, parentPhone: e.target.value })} placeholder="+998901234567" className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none" />
+            <input
+              type="tel"
+              required
+              value={form.parentPhone}
+              onChange={(e) => {
+                let digits = e.target.value.replace(/\D/g, '');
+                if (digits.startsWith('998')) digits = digits.slice(3);
+                digits = digits.slice(0, 9);
+                setForm({ ...form, parentPhone: '+998' + digits });
+              }}
+              placeholder="+998901234567"
+              className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none"
+            />
           </div>
           <div>
             <label className="block text-slate-300 mb-1 font-medium">Пароль Родителя</label>

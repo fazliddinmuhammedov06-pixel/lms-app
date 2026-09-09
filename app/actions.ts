@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { AttendanceStatus } from '@/types';
 import bcrypt from 'bcryptjs';
+import { normalizePhone, isValidUzPhone } from '@/lib/phone';
 
 export async function markAttendance(
   studentId: string,
@@ -315,15 +316,23 @@ export async function createStudent(data: {
     throw new Error('Доступ запрещён. Требуется роль DIRECTOR или MANAGER.');
   }
 
+  // Телефон родителя хранится в БД в каноническом формате: логин (lib/auth.ts)
+  // ищет пользователя именно по "+998XXXXXXXXX". Иначе аккаунт создаётся,
+  // но войти под ним нельзя ("Пользователь не найден").
+  const parentPhone = normalizePhone(data.parentPhone);
+  if (!parentPhone || !isValidUzPhone(parentPhone)) {
+    throw new Error('Неверный формат номера родителя. Используйте формат: +998XXXXXXXXX');
+  }
+
   const plainPassword = data.parentPassword || '123456';
   const passwordHash = await bcrypt.hash(plainPassword, 10);
 
-  let parentUser = await prisma.user.findUnique({ where: { phone: data.parentPhone } });
+  let parentUser = await prisma.user.findUnique({ where: { phone: parentPhone } });
   if (!parentUser) {
     parentUser = await prisma.user.create({
       data: {
         name: data.parentName,
-        phone: data.parentPhone,
+        phone: parentPhone,
         passwordHash,
         role: 'PARENT',
       },
@@ -345,11 +354,11 @@ export async function createStudent(data: {
   const student = await prisma.student.create({
     data: {
       name: data.name,
-      phone: data.phone || null,
+      phone: data.phone ? normalizePhone(data.phone) ?? data.phone.trim() : null,
       parentId: parent.id,
       groupId: data.groupId || null,
       subject: data.subject || 'Общий предмет',
-      parentPhone: data.parentPhone,
+      parentPhone: parentPhone,
     },
   });
 
@@ -371,7 +380,13 @@ export async function createTeacher(data: {
     throw new Error('Доступ запрещён. Требуется роль DIRECTOR.');
   }
 
-  let user = await prisma.user.findUnique({ where: { phone: data.phone } });
+  // Храним телефон в каноническом формате, как ищет его логин (lib/auth.ts).
+  const phone = normalizePhone(data.phone);
+  if (!phone || !isValidUzPhone(phone)) {
+    throw new Error('Неверный формат номера. Используйте формат: +998XXXXXXXXX');
+  }
+
+  let user = await prisma.user.findUnique({ where: { phone } });
   if (user) {
     throw new Error('Пользователь с таким номером уже существует.');
   }
@@ -382,7 +397,7 @@ export async function createTeacher(data: {
   user = await prisma.user.create({
     data: {
       name: data.name,
-      phone: data.phone,
+      phone,
       email: data.email || null,
       passwordHash,
       role: 'TEACHER',
