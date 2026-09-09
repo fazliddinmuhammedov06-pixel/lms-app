@@ -49,7 +49,7 @@ export async function generateOtp(phone: string): Promise<string> {
     data: { used: true },
   });
 
-  // В dev-режиме можно использовать как сгенерированный код, так и универсальный 123456
+  // Код всегда генерируется случайно (универсальных/захардкоженных кодов нет)
   const code = String(Math.floor(100000 + Math.random() * 900000));
   const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000);
 

@@ -1,32 +1,74 @@
+// Сид для продакшн-БД: гарантирует наличие аккаунта ДИРЕКТОРА и тестовых пользователей.
+// Пароли берутся ТОЛЬКО из переменных окружения — захардкоженных/дефолтных паролей в коде нет.
+//
+// Запуск:  node scripts/seed-users.js
+//
+// Требуемые переменные окружения (автоматически читаются из .env.production.local / .env.local):
+//   DIRECTOR_PHONE    - номер директора (логин), напр. "+998881060625"
+//   DIRECTOR_PASSWORD - пароль директора
+//   SEED_PASSWORD     - пароль тестовых пользователей (TEACHER/PARENT/STUDENT)
+
 const { PrismaClient } = require('@prisma/client');
+const fs = require('fs');
 const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
 
+// Загрузка переменных окружения из локальных env-файлов (без внешних зависимостей).
+// Уже установленные process.env имеют приоритет.
+function loadEnvFile(file) {
+  try {
+    const text = fs.readFileSync(file, 'utf8');
+    for (const line of text.split(/\r?\n/)) {
+      const m = line.match(/^\s*(?:export\s+)?([A-Z0-9_]+)\s*=\s*(.*?)\s*$/i);
+      if (m && !(m[1] in process.env)) process.env[m[1]] = m[2].trim().replace(/^["']|["']$/g, '');
+    }
+  } catch (e) {
+    /* env-файл может отсутствовать */
+  }
+}
+loadEnvFile('.env.production.local');
+loadEnvFile('.env.local');
+
 async function main() {
-  const plainPassword = '123456';
-  const passwordHash = await bcrypt.hash(plainPassword, 10);
+  const directorPhone = process.env.DIRECTOR_PHONE || '+998881060625';
+  const directorPassword = process.env.DIRECTOR_PASSWORD;
+  const seedPassword = process.env.SEED_PASSWORD;
+
+  if (!directorPassword) {
+    throw new Error('Не задан DIRECTOR_PASSWORD. Укажите пароль директора в .env.production.local и запустите скрипт заново.');
+  }
+  if (!seedPassword) {
+    throw new Error('Не задан SEED_PASSWORD (пароль тестовых пользователей). Укажите его в .env.production.local и запустите скрипт заново.');
+  }
+
+  const directorHash = await bcrypt.hash(directorPassword, 10);
+  const seedHash = await bcrypt.hash(seedPassword, 10);
 
   const users = [
     {
-      phone: '+998901234567',
+      phone: directorPhone,
       name: 'Директор Центра',
       role: 'DIRECTOR',
+      passwordHash: directorHash,
     },
     {
       phone: '+998907654321',
       name: 'Учитель Иванов',
       role: 'TEACHER',
+      passwordHash: seedHash,
     },
     {
       phone: '+998909998877',
       name: 'Родитель Смирнов',
       role: 'PARENT',
+      passwordHash: seedHash,
     },
     {
       phone: '+998905555555',
       name: 'Ученик Тестов',
       role: 'STUDENT',
+      passwordHash: seedHash,
     },
   ];
 
@@ -132,7 +174,7 @@ async function main() {
     },
   });
 
-  console.log('✅ Тестовые аккаунты, группа и ученик успешно созданы/обновлены!');
+  console.log(`✅ Аккаунты синхронизированы. Директор (логин): ${directorPhone}`);
 }
 
 main()

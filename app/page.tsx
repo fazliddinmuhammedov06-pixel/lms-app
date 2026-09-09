@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Phone, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import Link from 'next/link';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { useTranslations } from 'next-intl';
 
@@ -138,7 +139,12 @@ export default function LoginPage() {
         </form>
       </div>
 
-      <p className="mt-8 text-slate-600 text-xs">{t('copyright')}</p>
+      <p className="mt-8 text-slate-600 text-xs">
+        {t('copyright')} ·{' '}
+        <Link href="/privacy" className="underline hover:text-slate-400">
+          {t('privacy')}
+        </Link>
+      </p>
     </div>
   );
 }

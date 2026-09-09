@@ -120,7 +120,8 @@
     "errPhone": "To'liq telefon raqamini kiriting (+998 XX XXX XX XX)",
     "errPassword": "Parolni kiriting",
     "errAuth": "Telefon raqam yoki parol noto'g'ri.",
-    "copyright": "© 2025 Friday Education. Barcha huquqlar himoyalangan."
+    "copyright": "© 2025 Friday Education. Barcha huquqlar himoyalangan.",
+    "privacy": "Maxfiylik siyosati"
   },
   "header": {
     "centerTitle": "Friday LMS"
@@ -346,7 +347,7 @@
       "parentName": "Ota-onaning F.I.Sh. *",
       "parentPhone": "Ota-ona telefoni *",
       "parentPassword": "Ota-ona paroli",
-      "pwdPlaceholder": "Odatiy: 123456",
+      "pwdPlaceholder": "Kamida 6 ta belgi",
       "group": "Guruh",
       "noGroup": "Guruhsiz",
       "success": "O'quvchi qo'shildi"

@@ -1,5 +1,24 @@
 const { PrismaClient } = require('@prisma/client');
+const crypto = require('crypto');
+const fs = require('fs');
+const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
+
+// Загрузка переменных окружения из локальных env-файлов (без внешних зависимостей).
+// Приоритет: уже установленные process.env > .env.production.local > .env.local
+function loadEnvFile(file) {
+  try {
+    const text = fs.readFileSync(file, 'utf8');
+    for (const line of text.split(/\r?\n/)) {
+      const m = line.match(/^\s*(?:export\s+)?([A-Z0-9_]+)\s*=\s*(.*?)\s*$/i);
+      if (m && !(m[1] in process.env)) process.env[m[1]] = m[2].trim().replace(/^["']|["']$/g, '');
+    }
+  } catch (e) {
+    /* env-файл может отсутствовать */
+  }
+}
+loadEnvFile('.env.production.local');
+loadEnvFile('.env.local');
 
 async function main() {
   console.log('🔄 Очистка БД...');
@@ -18,25 +37,38 @@ async function main() {
   await prisma.centerSettings.create({
     data: {
       name: 'Friday Education LMS',
-      phone: '+998 90 123 45 67',
+      phone: '+998 88 106 06 25',
       address: 'г. Ташкент, ул. Амира Темура 45',
     }
   });
 
   console.log('🌱 Создание пользователей...');
-  const dir = await prisma.user.create({ data: { phone: '+998901234567', name: 'Абдуллаев Сардор', role: 'DIRECTOR', email: 'director@school.uz' } });
-  const mgr = await prisma.user.create({ data: { phone: '+998905554433', name: 'Каримова Мадина', role: 'MANAGER', email: 'manager@school.uz' } });
 
-  const tu1 = await prisma.user.create({ data: { phone: '+998907654321', name: 'Иванов Иван Иванович', role: 'TEACHER', email: 'ivanov@school.uz' } });
+  // Директор: номер из переменной окружения DIRECTOR_PHONE (без захардкоженных демо-логинов).
+  const directorPhone = process.env.DIRECTOR_PHONE || '+998881060625';
+  const directorPassword = process.env.DIRECTOR_PASSWORD;
+  const seedPassword = process.env.SEED_PASSWORD || process.env.DIRECTOR_PASSWORD || crypto.randomBytes(12).toString('hex');
+  const demoPasswordHash = await bcrypt.hash(seedPassword, 10);
+  const dirPasswordHash = await bcrypt.hash(directorPassword || seedPassword, 10);
+
+  const dir = await prisma.user.create({ data: { phone: directorPhone, name: 'Абдуллаев Сардор', role: 'DIRECTOR', email: 'director@school.uz', passwordHash: dirPasswordHash } });
+  const mgr = await prisma.user.create({ data: { phone: '+998905554433', name: 'Каримова Мадина', role: 'MANAGER', email: 'manager@school.uz', passwordHash: demoPasswordHash } });
+
+  if (!process.env.DIRECTOR_PASSWORD || !process.env.SEED_PASSWORD) {
+    console.log('⚠️ Внимание: пароли не заданы через env (DIRECTOR_PASSWORD / SEED_PASSWORD).');
+    console.log(`🔑 Сгенерированный пароль демо-пользователей: ${seedPassword}`);
+  }
+
+  const tu1 = await prisma.user.create({ data: { phone: '+998907654321', name: 'Иванов Иван Иванович', role: 'TEACHER', email: 'ivanov@school.uz', passwordHash: demoPasswordHash } });
   const t1 = await prisma.teacher.create({ data: { userId: tu1.id, subject: 'Английский язык', salary: 4500000 } });
 
-  const tu2 = await prisma.user.create({ data: { phone: '+998901111111', name: 'Петрова Анна Сергеевна', role: 'TEACHER', email: 'petrova@school.uz' } });
+  const tu2 = await prisma.user.create({ data: { phone: '+998901111111', name: 'Петрова Анна Сергеевна', role: 'TEACHER', email: 'petrova@school.uz', passwordHash: demoPasswordHash } });
   const t2 = await prisma.teacher.create({ data: { userId: tu2.id, subject: 'Математика / IT', salary: 5000000 } });
 
-  const pu1 = await prisma.user.create({ data: { phone: '+998909998877', name: 'Смирнов Андрей', role: 'PARENT', email: 'smirnov@mail.uz' } });
+  const pu1 = await prisma.user.create({ data: { phone: '+998909998877', name: 'Смирнов Андрей', role: 'PARENT', email: 'smirnov@mail.uz', passwordHash: demoPasswordHash } });
   const p1 = await prisma.parent.create({ data: { userId: pu1.id } });
 
-  const pu2 = await prisma.user.create({ data: { phone: '+998902222222', name: 'Кузнецова Елена', role: 'PARENT', email: 'kuznetsova@mail.uz' } });
+  const pu2 = await prisma.user.create({ data: { phone: '+998902222222', name: 'Кузнецова Елена', role: 'PARENT', email: 'kuznetsova@mail.uz', passwordHash: demoPasswordHash } });
   const p2 = await prisma.parent.create({ data: { userId: pu2.id } });
 
   console.log('🌱 Создание групп...');

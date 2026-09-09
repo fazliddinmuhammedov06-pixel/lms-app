@@ -64,11 +64,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             return null;
           }
         } else {
-          console.log('[Auth authorize] 5. passwordHash отсутствует, проверка с дефолтным 123456...');
-          if (password !== '123456') {
-            console.log('[Auth authorize] ❌ Ошибка: Неверный дефолтный пароль');
-            return null;
-          }
+          // Безопасность: аккаунт без passwordHash больше НЕ принимает дефолтный пароль 123456.
+          // Такой аккаунт считается не настроенным, вход для него запрещён.
+          console.log('[Auth authorize] ❌ Пароль для этого пользователя не задан (passwordHash отсутствует). Вход запрещён.');
+          return null;
         }
 
         console.log('[Auth authorize] ✅ Авторизация успешна для пользователя:', {

@@ -8,7 +8,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -37,6 +37,23 @@ android {
             }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+// Fail-fast: любой release-сборка не может быть подписана без key.properties.
+// key.properties и keystore (*.jks) в git не попадают (android/.gitignore).
+tasks.whenTaskAdded { task ->
+    if (task.name == 'assembleRelease' || task.name == 'bundleRelease') {
+        task.doFirst {
+            def keyPropertiesFile = rootProject.file('key.properties')
+            if (!keyPropertiesFile.exists()) {
+                throw new GradleException(
+                    "Release build requires signing.\n" +
+                    "Create android/key.properties (see android/key.properties.example) " +
+                    "and set storeFile/storePassword/keyAlias/keyPassword pointing to your release keystore."
+                )
+            }
         }
     }
 }

@@ -324,7 +324,12 @@ export async function createStudent(data: {
     throw new Error('Неверный формат номера родителя. Используйте формат: +998XXXXXXXXX');
   }
 
-  const plainPassword = data.parentPassword || '123456';
+  // Безопасность: пароль больше не подставляется по умолчанию (раньше был '123456').
+  // Аккаунт родителя создаётся только с явно заданным паролем (минимум 6 символов).
+  if (!data.parentPassword || data.parentPassword.trim().length < 6) {
+    throw new Error('Задайте пароль родителя (минимум 6 символов). Пароль по умолчанию больше не используется.');
+  }
+  const plainPassword = data.parentPassword;
   const passwordHash = await bcrypt.hash(plainPassword, 10);
 
   let parentUser = await prisma.user.findUnique({ where: { phone: parentPhone } });
@@ -391,7 +396,12 @@ export async function createTeacher(data: {
     throw new Error('Пользователь с таким номером уже существует.');
   }
 
-  const plainPassword = data.password || '123456';
+  // Безопасность: пароль больше не подставляется по умолчанию (раньше был '123456').
+  // Учитель создаётся только с явно заданным паролем (минимум 6 символов).
+  if (!data.password || data.password.trim().length < 6) {
+    throw new Error('Задайте пароль учителя (минимум 6 символов). Пароль по умолчанию больше не используется.');
+  }
+  const plainPassword = data.password;
   const passwordHash = await bcrypt.hash(plainPassword, 10);
 
   user = await prisma.user.create({

@@ -13,7 +13,8 @@ export function AddStudentModal({ groups, onClose }: { groups: any[]; onClose: (
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.parentName || !form.parentPhone) return toast.error('Заполните обязательные поля');
+    if (!form.name || !form.parentName || !form.parentPhone || !form.parentPassword) return toast.error('Заполните обязательные поля');
+    if (form.parentPassword.length < 6) return toast.error('Пароль родителя — минимум 6 символов');
     setLoading(true);
     try {
       await createStudent(form);
@@ -60,8 +61,8 @@ export function AddStudentModal({ groups, onClose }: { groups: any[]; onClose: (
             />
           </div>
           <div>
-            <label className="block text-slate-300 mb-1 font-medium">Пароль Родителя</label>
-            <input type="password" value={form.parentPassword} onChange={(e) => setForm({ ...form, parentPassword: e.target.value })} placeholder="По умолчанию: 123456" className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none" />
+            <label className="block text-slate-300 mb-1 font-medium">Пароль Родителя *</label>
+            <input type="password" required minLength={6} value={form.parentPassword} onChange={(e) => setForm({ ...form, parentPassword: e.target.value })} placeholder="Минимум 6 символов" className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none" />
           </div>
           <div>
             <label className="block text-slate-300 mb-1 font-medium">Группа</label>

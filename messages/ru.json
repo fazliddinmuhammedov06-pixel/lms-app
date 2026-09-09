@@ -120,7 +120,8 @@
     "errPhone": "Введите полный номер телефона (+998 XX XXX XX XX)",
     "errPassword": "Введите пароль",
     "errAuth": "Неверный номер телефона или пароль.",
-    "copyright": "© 2025 Friday Education. Все права защищены."
+    "copyright": "© 2025 Friday Education. Все права защищены.",
+    "privacy": "Политика конфиденциальности"
   },
   "header": {
     "centerTitle": "Friday LMS"
@@ -346,7 +347,7 @@
       "parentName": "ФИО Родителя *",
       "parentPhone": "Телефон Родителя *",
       "parentPassword": "Пароль Родителя",
-      "pwdPlaceholder": "По умолчанию: 123456",
+      "pwdPlaceholder": "Минимум 6 символов",
       "group": "Группа",
       "noGroup": "Без группы",
       "success": "Ученик добавлен"

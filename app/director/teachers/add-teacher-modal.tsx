@@ -14,6 +14,8 @@ export function AddTeacherModal({ onClose }: { onClose: () => void }) {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.phone) return toast.error('Заполните ФИО и Телефон');
+    if (!form.password) return toast.error('Задайте пароль учителя');
+    if (form.password.length < 6) return toast.error('Пароль учителя — минимум 6 символов');
     setLoading(true);
     try {
       await createTeacher(form);
@@ -56,8 +58,8 @@ export function AddTeacherModal({ onClose }: { onClose: () => void }) {
               />
           </div>
           <div>
-            <label className="block text-slate-300 mb-1 font-medium">Пароль</label>
-            <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="По умолчанию: 123456" className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none" />
+            <label className="block text-slate-300 mb-1 font-medium">Пароль *</label>
+            <input type="password" required minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Минимум 6 символов" className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none" />
           </div>
           <div>
             <label className="block text-slate-300 mb-1 font-medium">Предмет</label>
