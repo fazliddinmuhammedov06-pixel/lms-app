@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { LogOut, Menu, X } from 'lucide-react';
-import { ROLE_NAV_ITEMS } from '@/lib/nav-config';
+import { ROLE_NAV_ITEMS, getRoleHomeHref } from '@/lib/nav-config';
 import { useTranslations } from 'next-intl';
 import { LanguageSwitcher } from '../language-switcher';
 
@@ -28,7 +28,7 @@ export function Sidebar({ role, userName, userPhone, unreadCount = 0 }: SidebarP
   const navContent = (
     <div className="flex flex-col h-full bg-[#0f172a] border-r border-slate-800 text-slate-300 w-64">
       <div className="p-4 flex items-center justify-between border-b border-slate-800">
-        <Link href={`/${role.toLowerCase()}`} className="flex items-center gap-2.5">
+        <Link href={getRoleHomeHref(role)} className="flex items-center gap-2.5">
           <img src="/logo-star.png" alt="Logo" className="w-8 h-8 object-contain" />
           <div>
             <span className="text-white font-bold text-base tracking-wide block leading-tight">FRIDAY</span>

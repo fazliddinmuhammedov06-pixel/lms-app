@@ -57,16 +57,20 @@ export const ROLE_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Уведомления', key: 'notifications', href: '/student/notifications', icon: Bell },
   ],
   PARENT: [
-    { name: 'Главная', key: 'home', href: '/parent', icon: Home },
-    { name: 'Дети', key: 'children', href: '/parent/children', icon: Users },
-    { name: 'Расписание', key: 'schedule', href: '/parent/schedule', icon: Calendar },
-    { name: 'Посещаемость', key: 'attendance', href: '/parent/attendance', icon: CheckSquare },
-    { name: 'Оценки', key: 'grades', href: '/parent/grades', icon: Star },
-    { name: 'Домашки', key: 'homework', href: '/parent/homework', icon: BookOpen },
-    { name: 'Платежи', key: 'payments', href: '/parent/payments', icon: CreditCard },
-    { name: 'Уведомления', key: 'notifications', href: '/parent/notifications', icon: Bell },
+    { name: 'Главная', key: 'home', href: '/student', icon: Home },
+    { name: 'Рейтинг', key: 'rating', href: '/student/rating', icon: Trophy },
+    { name: 'Расписание', key: 'schedule', href: '/student/schedule', icon: Calendar },
+    { name: 'Домашки', key: 'homework', href: '/student/homework', icon: BookOpen },
+    { name: 'Мои Звёзды', key: 'myStars', href: '/student/stars', icon: Award },
+    { name: 'Магазин наград', key: 'rewardStore', href: '/student/store', icon: ShoppingBag },
+    { name: 'Уведомления', key: 'notifications', href: '/student/notifications', icon: Bell },
   ],
 };
+
+export function getRoleHomeHref(role: string): string {
+  // PARENT показывают студенческую панель (/student), т.к. /parent-страниц нет
+  return role === 'PARENT' ? '/student' : `/${role.toLowerCase()}`;
+}
 
 export const ROLE_LABELS: Record<string, string> = {
   DIRECTOR: 'Директор',

@@ -5,6 +5,7 @@ import { Sidebar } from './sidebar';
 import { Search, Bell, User } from 'lucide-react';
 import Link from 'next/link';
 import { LanguageSwitcher } from '../language-switcher';
+import { getRoleHomeHref } from '@/lib/nav-config';
 import { useTranslations } from 'next-intl';
 
 interface AppLayoutProps {
@@ -50,7 +51,7 @@ export function AppLayout({
 
             {/* Notifications Button */}
             <Link
-              href={`/${role.toLowerCase()}/notifications`}
+              href={`${getRoleHomeHref(role)}/notifications`}
               className="relative p-2 rounded-lg bg-[#1e293b] border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition-colors"
             >
               <Bell className="w-4 h-4" />
