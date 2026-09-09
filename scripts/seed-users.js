@@ -78,13 +78,13 @@ async function main() {
       update: {
         role: u.role,
         name: u.name,
-        passwordHash: passwordHash,
+        passwordHash: u.passwordHash,
       },
       create: {
         phone: u.phone,
         name: u.name,
         role: u.role,
-        passwordHash: passwordHash,
+        passwordHash: u.passwordHash,
       },
     });
 

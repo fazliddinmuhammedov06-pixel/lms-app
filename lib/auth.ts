@@ -24,57 +24,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        console.log('[Auth authorize] 1. Попытка авторизации');
-
         const rawPhone = (credentials?.phone as string | undefined)?.trim();
         const password = credentials?.password as string | undefined;
 
-        console.log('[Auth authorize] 2. Входной телефон:', rawPhone, '| Пароль передается:', !!password);
-
         if (!rawPhone || !password) {
-          console.log('[Auth authorize] ❌ Ошибка: Не указан телефон или пароль');
           return null;
         }
 
         // Нормализация телефона (+998XXXXXXXXX)
         const phone = normalizePhone(rawPhone) ?? rawPhone.trim();
 
-        console.log('[Auth authorize] 3. Нормализованный номер телефона:', phone);
-
         const user = await prisma.user.findUnique({ where: { phone } });
 
-        console.log(
-          '[Auth authorize] 4. Результат поиска в БД:',
-          user
-            ? { id: user.id, phone: user.phone, role: user.role, hasPasswordHash: !!user.passwordHash }
-            : 'ПОЛЬЗОВАТЕЛЬ НЕ НАЙДЕН'
-        );
-
         if (!user) {
-          console.log('[Auth authorize] ❌ Ошибка: Пользователь с таким телефоном не найден в БД');
           return null;
         }
 
         if (user.passwordHash) {
-          console.log('[Auth authorize] 5. Проверка bcrypt пароля...');
           const isValid = await bcrypt.compare(password, user.passwordHash);
-          console.log('[Auth authorize] 5. Результат проверки пароля (bcrypt.compare):', isValid);
           if (!isValid) {
-            console.log('[Auth authorize] ❌ Ошибка: Неверный пароль');
             return null;
           }
         } else {
-          // Безопасность: аккаунт без passwordHash больше НЕ принимает дефолтный пароль 123456.
-          // Такой аккаунт считается не настроенным, вход для него запрещён.
-          console.log('[Auth authorize] ❌ Пароль для этого пользователя не задан (passwordHash отсутствует). Вход запрещён.');
+          // Безопасность: аккаунт без passwordHash не принимает вход.
           return null;
         }
-
-        console.log('[Auth authorize] ✅ Авторизация успешна для пользователя:', {
-          id: user.id,
-          name: user.name,
-          role: user.role,
-        });
 
         return {
           id: user.id,
