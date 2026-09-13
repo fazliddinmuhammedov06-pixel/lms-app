@@ -4,19 +4,26 @@ import React, { useState } from 'react';
 import { AppLayout } from '@/components/layout/app-layout';
 import { Avatar } from '@/components/ui/avatar';
 import { EmptyState } from '@/components/ui/empty-state';
-import { GraduationCap, UserPlus, Search } from 'lucide-react';
+import { GraduationCap, UserPlus, UserMinus, Search } from 'lucide-react';
 import { AddTeacherModal } from './add-teacher-modal';
+import { TeacherAddStudentModal } from './teacher-add-student-modal';
+import { TeacherRemoveStudentModal } from './teacher-remove-student-modal';
 
 export default function TeachersClient({
-  role, userName, userPhone, unreadCount, teachers,
+  role, userName, userPhone, unreadCount, teachers, availableStudents = [],
 }: any) {
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [addStudentTeacherId, setAddStudentTeacherId] = useState<string | null>(null);
+  const [removeStudentTeacherId, setRemoveStudentTeacherId] = useState<string | null>(null);
 
   const filtered = teachers.filter((t: any) =>
     t.name.toLowerCase().includes(search.toLowerCase()) ||
     t.subject.toLowerCase().includes(search.toLowerCase())
   );
+
+  const activeAddTeacher = teachers.find((t: any) => t.id === addStudentTeacherId);
+  const activeRemoveTeacher = teachers.find((t: any) => t.id === removeStudentTeacherId);
 
   return (
     <AppLayout role={role} userName={userName} userPhone={userPhone} unreadCount={unreadCount} title="Учителя Преподаватели">
@@ -47,14 +54,50 @@ export default function TeachersClient({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-center text-xs pt-2 border-t border-slate-800">
-                <div className="bg-[#0f172a] p-2 rounded border border-slate-800">
+              <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-800">
+                <div className="bg-[#0f172a] p-2 rounded border border-slate-800 flex flex-col justify-between">
                   <span className="text-slate-400 text-[10px]">Групп</span>
-                  <p className="font-bold text-white text-sm">{t.groupsCount}</p>
+                  <p className="font-bold text-white text-sm mt-0.5">{t.groupsCount}</p>
                 </div>
-                <div className="bg-[#0f172a] p-2 rounded border border-slate-800">
-                  <span className="text-slate-400 text-[10px]">Учеников</span>
-                  <p className="font-bold text-emerald-400 text-sm">{t.totalStudents}</p>
+                <div className="bg-[#0f172a] p-2 rounded border border-slate-800 flex flex-col justify-between">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 text-[10px]">Учеников</span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setAddStudentTeacherId(t.id)}
+                        disabled={t.groupsCount === 0}
+                        title={t.groupsCount === 0 ? 'У учителя нет групп' : 'Добавить ученика'}
+                        className={`p-1 rounded border transition-colors ${
+                          t.groupsCount > 0
+                            ? 'bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border-orange-500/30 cursor-pointer'
+                            : 'bg-slate-800/40 text-slate-600 border-slate-700/40 cursor-not-allowed opacity-40'
+                        }`}
+                      >
+                        <UserPlus className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setRemoveStudentTeacherId(t.id)}
+                        disabled={t.totalStudents === 0 || t.groupsCount === 0}
+                        title={
+                          t.groupsCount === 0
+                            ? 'У учителя нет групп'
+                            : t.totalStudents === 0
+                            ? 'В группах нет учеников'
+                            : 'Удалить ученика'
+                        }
+                        className={`p-1 rounded border transition-colors ${
+                          t.totalStudents > 0 && t.groupsCount > 0
+                            ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/30 cursor-pointer'
+                            : 'bg-slate-800/40 text-slate-600 border-slate-700/40 cursor-not-allowed opacity-40'
+                        }`}
+                      >
+                        <UserMinus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                  <p className="font-bold text-emerald-400 text-sm mt-0.5">{t.totalStudents}</p>
                 </div>
               </div>
 
@@ -77,6 +120,21 @@ export default function TeachersClient({
       </div>
 
       {isModalOpen && <AddTeacherModal onClose={() => setIsModalOpen(false)} />}
+
+      {activeAddTeacher && (
+        <TeacherAddStudentModal
+          teacher={activeAddTeacher}
+          availableStudents={availableStudents}
+          onClose={() => setAddStudentTeacherId(null)}
+        />
+      )}
+
+      {activeRemoveTeacher && (
+        <TeacherRemoveStudentModal
+          teacher={activeRemoveTeacher}
+          onClose={() => setRemoveStudentTeacherId(null)}
+        />
+      )}
     </AppLayout>
   );
 }

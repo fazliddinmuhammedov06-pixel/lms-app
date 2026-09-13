@@ -170,6 +170,7 @@ export async function updateStudentGroup(studentId: string, groupId: string | nu
   revalidatePath('/director/students');
   revalidatePath('/director/groups');
   revalidatePath('/director/groups', 'layout');
+  revalidatePath('/director/teachers');
   if (groupId) {
     revalidatePath(`/director/groups/${groupId}`);
     revalidatePath(`/manager/groups/${groupId}`);
