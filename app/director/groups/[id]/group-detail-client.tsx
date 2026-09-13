@@ -18,9 +18,9 @@ export default function GroupDetailClient({
   const [searchStudent, setSearchStudent] = useState('');
   const [processing, setProcessing] = useState<string | null>(null);
 
-  const filteredAvailable = availableStudents.filter((s: any) =>
-    s.name.toLowerCase().includes(searchStudent.toLowerCase()) ||
-    s.parentName.toLowerCase().includes(searchStudent.toLowerCase())
+  const filteredAvailable = (availableStudents || []).filter((s: any) =>
+    (s.name || '').toLowerCase().includes(searchStudent.toLowerCase()) ||
+    (s.parentName || '').toLowerCase().includes(searchStudent.toLowerCase())
   );
 
   const handleAddStudent = async (studentId: string) => {

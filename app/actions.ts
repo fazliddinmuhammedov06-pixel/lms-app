@@ -142,11 +142,13 @@ export async function updateStudentGroup(studentId: string, groupId: string | nu
   // Проверяем существование студента
   const student = await prisma.student.findUnique({
     where: { id: studentId },
-    select: { id: true, name: true },
+    select: { id: true, name: true, groupId: true },
   });
   if (!student) {
     throw new Error('Студент не найден.');
   }
+
+  const previousGroupId = student.groupId;
 
   // Если groupId указан, проверяем существование группы
   if (groupId) {
@@ -167,8 +169,22 @@ export async function updateStudentGroup(studentId: string, groupId: string | nu
 
   revalidatePath('/director/students');
   revalidatePath('/director/groups');
+  revalidatePath('/director/groups', 'layout');
+  if (groupId) {
+    revalidatePath(`/director/groups/${groupId}`);
+    revalidatePath(`/manager/groups/${groupId}`);
+    revalidatePath(`/teacher/groups/${groupId}`);
+  }
+  if (previousGroupId && previousGroupId !== groupId) {
+    revalidatePath(`/director/groups/${previousGroupId}`);
+    revalidatePath(`/manager/groups/${previousGroupId}`);
+    revalidatePath(`/teacher/groups/${previousGroupId}`);
+  }
   revalidatePath('/manager/students');
+  revalidatePath('/manager/groups');
+  revalidatePath('/manager/groups', 'layout');
   revalidatePath('/teacher');
+  revalidatePath('/teacher/groups', 'layout');
   return { success: true, student: updatedStudent };
 }
 

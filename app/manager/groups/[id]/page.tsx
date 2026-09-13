@@ -46,6 +46,7 @@ export default async function ManagerGroupDetailPage(props: { params: Promise<{ 
     },
     include: {
       parent: { include: { user: true } },
+      group: { select: { id: true, name: true } },
     },
     orderBy: { name: 'asc' },
   });
@@ -59,7 +60,7 @@ export default async function ManagerGroupDetailPage(props: { params: Promise<{ 
     name: group.name,
     subject: group.subject || 'Английский язык',
     level: group.level || 'A1 Beginner',
-    teacherName: group.teacher.user.name,
+    teacherName: group.teacher?.user?.name || '—',
     teacherId: group.teacherId,
     room: group.room || 'Кабинет 101',
     monthlyPrice: group.monthlyPrice,
@@ -67,9 +68,9 @@ export default async function ManagerGroupDetailPage(props: { params: Promise<{ 
     students: group.students.map((s) => ({
       id: s.id,
       name: s.name,
-      phone: s.phone,
-      parentName: s.parent.user.name,
-      parentPhone: s.parent.user.phone,
+      phone: s.phone || '—',
+      parentName: s.parent?.user?.name || '—',
+      parentPhone: s.parent?.user?.phone || '—',
       stars: s.stars,
     })),
     lessonsCount: group.lessons.length,
@@ -78,8 +79,8 @@ export default async function ManagerGroupDetailPage(props: { params: Promise<{ 
   const availableStudentsData = availableStudents.map((s) => ({
     id: s.id,
     name: s.name,
-    parentName: s.parent.user.name,
-    groupName: s.groupId ? '(в другой группе)' : '(без группы)',
+    parentName: s.parent?.user?.name || '—',
+    groupName: s.group ? `(в группе: ${s.group.name})` : '(без группы)',
   }));
 
   return (
