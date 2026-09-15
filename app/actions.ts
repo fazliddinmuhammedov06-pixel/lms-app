@@ -443,6 +443,39 @@ export async function createTeacher(data: {
   return { success: true, teacher };
 }
 
+export async function deleteTeacher(teacherId: string) {
+  const session = await auth();
+  if (!session || (session.user as any)?.role !== 'DIRECTOR') {
+    throw new Error('Доступ запрещён. Требуется роль DIRECTOR.');
+  }
+
+  const teacher = await prisma.teacher.findUnique({
+    where: { id: teacherId },
+    select: { id: true, userId: true },
+  });
+
+  if (!teacher) {
+    throw new Error('Учитель не найден.');
+  }
+
+  // Удаляем пользователя учителя, что через каскад удаляет Teacher и все связанные группы/данные
+  await prisma.user.delete({
+    where: { id: teacher.userId },
+  });
+
+  revalidatePath('/director/teachers');
+  revalidatePath('/director/groups');
+  revalidatePath('/director/schedule');
+  revalidatePath('/director/students');
+  revalidatePath('/director/attendance');
+  revalidatePath('/manager/groups');
+  revalidatePath('/manager/schedule');
+  revalidatePath('/manager/students');
+  revalidatePath('/teacher/schedule');
+
+  return { success: true };
+}
+
 export async function createGroup(data: {
   name: string;
   subject: string;
@@ -527,6 +560,43 @@ export async function createLesson(data: {
   revalidatePath('/director/schedule');
   revalidatePath('/teacher/schedule');
   return { success: true, lesson };
+}
+
+export async function deleteLesson(lessonId: string) {
+  const session = await auth();
+  const role = (session?.user as any)?.role;
+  if (!session || (role !== 'DIRECTOR' && role !== 'MANAGER' && role !== 'TEACHER')) {
+    throw new Error('Доступ запрещён.');
+  }
+
+  const lesson = await prisma.lesson.findUnique({
+    where: { id: lessonId },
+    include: { group: { select: { teacherId: true } } },
+  });
+
+  if (!lesson) {
+    throw new Error('Занятие не найдено.');
+  }
+
+  if (role === 'TEACHER') {
+    const teacher = await prisma.teacher.findUnique({
+      where: { userId: (session.user as any).id },
+      select: { id: true },
+    });
+    if (!teacher || lesson.group.teacherId !== teacher.id) {
+      throw new Error('Доступ запрещён: занятие не принадлежит вашей группе.');
+    }
+  }
+
+  await prisma.lesson.delete({
+    where: { id: lessonId },
+  });
+
+  revalidatePath('/director/schedule');
+  revalidatePath('/manager/schedule');
+  revalidatePath('/teacher/schedule');
+
+  return { success: true };
 }
 
 export async function createPayment(data: {
