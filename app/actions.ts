@@ -476,6 +476,48 @@ export async function deleteTeacher(teacherId: string) {
   return { success: true };
 }
 
+export async function deleteStudent(studentId: string) {
+  const session = await auth();
+  const role = (session?.user as any)?.role;
+  if (!session || (role !== 'DIRECTOR' && role !== 'MANAGER')) {
+    throw new Error('Доступ запрещён. Требуется роль DIRECTOR или MANAGER.');
+  }
+
+  const student = await prisma.student.findUnique({
+    where: { id: studentId },
+    include: { parent: true },
+  });
+  if (!student) {
+    throw new Error('Ученик не найден.');
+  }
+
+  // Удаляем ученика: каскадом из БД уходят все связанные записи
+  // (посещаемость, звёзды, заявки на скидку, платежи, ДЗ, оценки).
+  // Группа при этом не затрагивается.
+  await prisma.$transaction(async (tx) => {
+    await tx.student.delete({ where: { id: studentId } });
+
+    // Если у родителя не осталось учеников — удаляем и его аккаунт,
+    // чтобы не оставлять осиротевшие записи в БД.
+    const remainingStudents = await tx.student.count({
+      where: { parentId: student.parentId },
+    });
+    if (remainingStudents === 0) {
+      await tx.user.delete({ where: { id: student.parent.userId } });
+    }
+  });
+
+  revalidatePath('/director/students');
+  revalidatePath('/manager/students');
+  revalidatePath('/teacher/students');
+  revalidatePath('/director/groups');
+  revalidatePath('/director/groups', 'layout');
+  revalidatePath('/manager/groups');
+  revalidatePath('/director');
+
+  return { success: true };
+}
+
 export async function createGroup(data: {
   name: string;
   subject: string;

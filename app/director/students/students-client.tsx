@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { AppLayout } from '@/components/layout/app-layout';
 import { Avatar } from '@/components/ui/avatar';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Search, UserPlus, Star, Eye, Users } from 'lucide-react';
+import { Search, UserPlus, Star, Eye, Users, Trash2, X } from 'lucide-react';
 import { AddStudentModal } from './add-student-modal';
-import { updateStudentGroup } from '@/app/actions';
+import { updateStudentGroup, deleteStudent } from '@/app/actions';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
@@ -19,6 +19,8 @@ export default function StudentsClient({
   const [selectedGroup, setSelectedGroup] = useState('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<string | null>(null);
+  const [studentToDelete, setStudentToDelete] = useState<any | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const filtered = students.filter((st: any) => {
     const matchS = st.name.toLowerCase().includes(search.toLowerCase()) || st.parentName.toLowerCase().includes(search.toLowerCase());
@@ -36,6 +38,21 @@ export default function StudentsClient({
       toast.error(err.message || 'Ошибка');
     } finally {
       setEditingStudent(null);
+    }
+  };
+
+  const handleDeleteStudent = async () => {
+    if (!studentToDelete) return;
+    setIsDeleting(true);
+    try {
+      await deleteStudent(studentToDelete.id);
+      toast.success(`Ученик ${studentToDelete.name} удалён`);
+      setStudentToDelete(null);
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err.message || 'Ошибка при удалении ученика');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -84,6 +101,16 @@ export default function StudentsClient({
                     <td className="p-3.5 font-bold text-orange-400"><span className="flex items-center gap-1"><Star className="w-3.5 h-3.5 fill-orange-400" /> {st.stars}</span></td>
                     <td className="p-3.5 text-right">
                       <Link href={`/${role.toLowerCase()}/students/${st.id}`} className="inline-flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded text-[11px] font-semibold"><Eye className="w-3 h-3 text-orange-400" /><span>Профиль</span></Link>
+                      {role === 'DIRECTOR' && (
+                        <button
+                          type="button"
+                          onClick={() => setStudentToDelete(st)}
+                          title="Удалить ученика"
+                          className="ml-1 p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded border border-transparent hover:border-red-500/20 transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -94,6 +121,55 @@ export default function StudentsClient({
       </div>
 
       {isModalOpen && <AddStudentModal groups={groups} onClose={() => setIsModalOpen(false)} />}
+
+      {studentToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
+          <div className="bg-[#1e293b] border border-slate-800 rounded-lg w-full max-w-sm p-5 space-y-4 relative text-xs shadow-xl">
+            <button
+              type="button"
+              onClick={() => setStudentToDelete(null)}
+              disabled={isDeleting}
+              className="absolute top-3 right-3 text-slate-400 hover:text-white disabled:opacity-50 cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5 text-red-400" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-white">Удаление ученика</h2>
+                <p className="text-slate-400 text-[11px]">{studentToDelete.name}</p>
+              </div>
+            </div>
+
+            <p className="text-slate-300 leading-relaxed">
+              Вы уверены, что хотите удалить ученика <strong className="text-white">{studentToDelete.name}</strong>? Все связанные данные (посещаемость, оценки, звёзды, платежи) будут безвозвратно удалены из базы. Это действие нельзя отменить.
+            </p>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setStudentToDelete(null)}
+                disabled={isDeleting}
+                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded font-semibold cursor-pointer disabled:opacity-50"
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteStudent}
+                disabled={isDeleting}
+                className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{isDeleting ? 'Удаление...' : 'Удалить ученика'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 }
