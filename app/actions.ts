@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { AttendanceStatus } from '@/types';
 import bcrypt from 'bcryptjs';
 import { normalizePhone, isValidUzPhone } from '@/lib/phone';
+import { isMeaningfulName } from '@/lib/name';
 
 export async function markAttendance(
   studentId: string,
@@ -336,6 +337,14 @@ export async function createStudent(data: {
   // Телефон родителя хранится в БД в каноническом формате: логин (lib/auth.ts)
   // ищет пользователя именно по "+998XXXXXXXXX". Иначе аккаунт создаётся,
   // но войти под ним нельзя ("Пользователь не найден").
+  // Имя родителя сохраняется в User.name и показывается родителю в сайдбаре.
+  // Раньше сюда могли попасть "." / "," (пустые/служебные значения из импорта),
+  // поэтому имя обязано быть осмысленным (хотя бы 2 буквы).
+  const parentName = (data.parentName || '').trim();
+  if (!isMeaningfulName(parentName)) {
+    throw new Error('Введите ФИО родителя (минимум 2 буквы). С этим именем создаётся аккаунт родителя.');
+  }
+
   const parentPhone = normalizePhone(data.parentPhone);
   if (!parentPhone || !isValidUzPhone(parentPhone)) {
     throw new Error('Неверный формат номера родителя. Используйте формат: +998XXXXXXXXX');
@@ -353,7 +362,7 @@ export async function createStudent(data: {
   if (!parentUser) {
     parentUser = await prisma.user.create({
       data: {
-        name: data.parentName,
+        name: parentName,
         phone: parentPhone,
         passwordHash,
         role: 'PARENT',
@@ -402,6 +411,13 @@ export async function createTeacher(data: {
     throw new Error('Доступ запрещён. Требуется роль DIRECTOR.');
   }
 
+  // Имя учителя сохраняется в User.name и отображается в списках. Не допускаем
+  // пустых/служебных значений вроде "." — как в аккаунтах родителей.
+  const teacherName = (data.name || '').trim();
+  if (!isMeaningfulName(teacherName)) {
+    throw new Error('Введите ФИО учителя (минимум 2 буквы).');
+  }
+
   // Храним телефон в каноническом формате, как ищет его логин (lib/auth.ts).
   const phone = normalizePhone(data.phone);
   if (!phone || !isValidUzPhone(phone)) {
@@ -423,7 +439,7 @@ export async function createTeacher(data: {
 
   user = await prisma.user.create({
     data: {
-      name: data.name,
+      name: teacherName,
       phone,
       email: data.email || null,
       passwordHash,

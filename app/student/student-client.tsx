@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { getStudentLevel } from '@/lib/levels';
-import { Award, Star, Gift, AlertTriangle, Trophy, TrendingUp, TrendingDown, Minus, ChevronRight } from 'lucide-react';
+import { Award, Star, Gift, AlertTriangle, Trophy, TrendingUp, TrendingDown, Minus, ChevronRight, GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
 import { Avatar } from '@/components/ui/avatar';
 import { ProgressBar } from '@/components/ui/progress-bar';
@@ -59,6 +59,24 @@ export default function StudentClient({ initialStudents }: { initialStudents: an
             <div className="text-right"><p className="font-bold text-orange-400 flex items-center justify-end"><Star className="w-3.5 h-3.5 fill-orange-400" /> {student.currentBalance}</p></div>
           </div>
           <ProgressBar value={lvl.progressPercent} className="h-1.5" />
+        </div>
+
+        <div className="bg-[#1e293b] p-4 border border-slate-800">
+          <h2 className="font-bold mb-2 flex items-center gap-1 text-sm"><GraduationCap className="w-3.5 h-3.5 text-orange-400" /> {t('myTeacher')}</h2>
+          {student.teacherName ? (
+            <div className="flex items-center gap-3">
+              <Avatar name={student.teacherName} size={40} />
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-xs text-white truncate">{student.teacherName}</p>
+                <p className="text-[10px] text-slate-400 truncate">
+                  {t('subject')}: {student.subject || t('noGroup')}
+                  {student.groupName ? <span className="text-slate-500"> • {t('group')}: {student.groupName}</span> : null}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-[10px] text-slate-400">{t('noGroup')}</p>
+          )}
         </div>
 
         {rating && (

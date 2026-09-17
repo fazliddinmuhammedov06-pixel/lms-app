@@ -192,6 +192,10 @@
   "student": {
     "dashboard": "O'quvchi kabineti",
     "noStudents": "O'quvchilar yo'q",
+    "myTeacher": "Mening o'qituvchim",
+    "subject": "Fan",
+    "group": "Guruh",
+    "noGroup": "Guruh tayinlanmagan",
     "level": "Daraja",
     "rank": "O'rin",
     "stars": "Yulduzlar",

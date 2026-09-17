@@ -6,6 +6,7 @@ import { Search, Bell, User } from 'lucide-react';
 import Link from 'next/link';
 import { LanguageSwitcher } from '../language-switcher';
 import { getRoleHomeHref } from '@/lib/nav-config';
+import { getDisplayName } from '@/lib/name';
 import { useTranslations } from 'next-intl';
 
 interface AppLayoutProps {
@@ -26,7 +27,9 @@ export function AppLayout({
   title,
 }: AppLayoutProps) {
   const t = useTranslations('common');
-  const displayUserName = userName || t('user');
+  // Имя может быть пустым/бессмысленным ("." из импорта) — показываем fallback.
+  const displayUserName = getDisplayName(userName, t('user'));
+  const displayInitial = displayUserName.trim().charAt(0).toUpperCase() || '?';
   const roleLabel = t(`roles.${role}` as any) || role;
 
   return (
@@ -65,7 +68,7 @@ export function AppLayout({
             {/* Profile pill */}
             <div className="flex items-center gap-2.5 bg-[#1e293b] border border-slate-800 px-3 py-1.5 rounded-lg">
               <div className="w-7 h-7 bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-full flex items-center justify-center font-bold text-xs">
-                {displayUserName.charAt(0).toUpperCase()}
+                {displayInitial}
               </div>
               <div className="text-left leading-tight">
                 <span className="block text-xs font-semibold text-white">{displayUserName}</span>

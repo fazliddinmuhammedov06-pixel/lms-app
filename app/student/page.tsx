@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { calculateTotalStarsEarned } from '@/lib/levels';
 import { getLeaderboardData } from '@/lib/rating';
+import { getDisplayName } from '@/lib/name';
 import { AppLayout } from '@/components/layout/app-layout';
 import StudentClient from './student-client';
 
@@ -18,8 +19,10 @@ export default async function StudentPageServer() {
   }
 
   const userId = (session.user as any).id;
-  const userName = (session.user as any).name || 'Студент';
   const userPhone = (session.user as any).phone;
+
+  // Имя из сессии может быть бессмысленным ("." из старого импорта) — имя для
+  // сайдбара/хэдера вычисляем ниже, после загрузки списка учеников.
 
   let studentsData: any[] = [];
 
@@ -28,7 +31,11 @@ export default async function StudentPageServer() {
     include: {
       students: {
         include: {
-          group: true,
+          group: {
+            include: {
+              teacher: { include: { user: true } },
+            },
+          },
           starTransactions: {
             orderBy: { createdAt: 'desc' },
           },
@@ -54,7 +61,11 @@ export default async function StudentPageServer() {
     const dbStudents = await prisma.student.findMany({
       where: { phone: userPhone },
       include: {
-        group: true,
+        group: {
+          include: {
+            teacher: { include: { user: true } },
+          },
+        },
         starTransactions: {
           orderBy: { createdAt: 'desc' },
         },
@@ -73,6 +84,13 @@ export default async function StudentPageServer() {
     });
     studentsData = dbStudents;
   }
+
+  // Имя для сайдбара/хэдера: своё настоящее имя, если оно осмысленное,
+  // иначе — имя первого ученика (у аккаунтов-родителей с импортированным
+  // именем "." / "," в User.name), иначе — «Студент».
+  const rawUserName = ((session.user as any).name || '').trim();
+  const firstStudentName = studentsData?.[0]?.name || '';
+  const userName = getDisplayName(rawUserName, firstStudentName || 'Студент');
 
   const unreadCount = await prisma.notification.count({
     where: { userId, read: false },
@@ -108,6 +126,9 @@ export default async function StudentPageServer() {
       return {
         id: st.id,
         name: st.name,
+        groupName: st.group?.name || null,
+        teacherName: st.group?.teacher?.user?.name || null,
+        subject: st.group?.subject || st.group?.teacher?.subject || null,
         currentBalance: st.stars,
         totalStars,
         absences,

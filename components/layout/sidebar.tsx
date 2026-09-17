@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { LogOut, Menu, X } from 'lucide-react';
 import { ROLE_NAV_ITEMS, getRoleHomeHref } from '@/lib/nav-config';
+import { getDisplayName } from '@/lib/name';
 import { useTranslations } from 'next-intl';
 import { LanguageSwitcher } from '../language-switcher';
 
@@ -24,6 +25,9 @@ export function Sidebar({ role, userName, userPhone, unreadCount = 0 }: SidebarP
 
   const items = ROLE_NAV_ITEMS[role] || ROLE_NAV_ITEMS['STUDENT'];
   const roleLabel = tCommon(`roles.${role}` as any) || role;
+  // Имя может быть пустым или бессмысленным (".", "," из старого импорта) —
+  // показываем понятный fallback вместо точки.
+  const displayName = getDisplayName(userName, tCommon('user'));
 
   const navContent = (
     <div className="flex flex-col h-full bg-[#0f172a] border-r border-slate-800 text-slate-300 w-64">
@@ -82,7 +86,7 @@ export function Sidebar({ role, userName, userPhone, unreadCount = 0 }: SidebarP
           <LanguageSwitcher variant="compact" />
         </div>
         <div>
-          <p className="text-xs font-bold text-white truncate">{userName || tCommon('user')}</p>
+          <p className="text-xs font-bold text-white truncate">{displayName}</p>
           <p className="text-[10px] text-slate-400 truncate">{userPhone || ''}</p>
         </div>
         <button
