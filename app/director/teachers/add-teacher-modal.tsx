@@ -9,7 +9,10 @@ import { useRouter } from 'next/navigation';
 export function AddTeacherModal({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ name: '', phone: '', password: '', email: '', subject: 'Английский язык', salary: 4000000 });
+  // Форма ВСЕГДА открывается пустой (для создания нового учителя). Никакие
+  // значения из существующих учителей сюда не подставляются.
+  // salary хранится строкой: так пользователь может оставить поле пустым.
+  const [form, setForm] = useState({ name: '', phone: '', password: '', email: '', subject: '', salary: '' });
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,7 +21,15 @@ export function AddTeacherModal({ onClose }: { onClose: () => void }) {
     if (form.password.length < 6) return toast.error('Пароль учителя — минимум 6 символов');
     setLoading(true);
     try {
-      await createTeacher(form);
+      // salary: пустое поле = 0 (см. action createTeacher).
+      await createTeacher({
+        name: form.name,
+        phone: form.phone,
+        password: form.password,
+        email: form.email || undefined,
+        subject: form.subject || undefined,
+        salary: form.salary === '' ? undefined : Number(form.salary),
+      });
       toast.success(`Учитель ${form.name} создан!`);
       onClose();
       router.refresh();
@@ -63,11 +74,11 @@ export function AddTeacherModal({ onClose }: { onClose: () => void }) {
           </div>
           <div>
             <label className="block text-slate-300 mb-1 font-medium">Предмет</label>
-            <input type="text" value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} placeholder="Английский язык" className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none" />
+            <input type="text" value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} placeholder="Например, Английский язык" className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none" />
           </div>
           <div>
             <label className="block text-slate-300 mb-1 font-medium">Зарплата (UZS)</label>
-            <input type="number" value={form.salary} onChange={(e) => setForm({ ...form, salary: Number(e.target.value) })} className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none" />
+            <input type="number" min={0} value={form.salary} onChange={(e) => setForm({ ...form, salary: e.target.value })} placeholder="Например, 4000000" className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none" />
           </div>
           <div className="pt-2 flex justify-end gap-2">
             <button type="button" onClick={onClose} className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded font-semibold">Отмена</button>

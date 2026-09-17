@@ -43,12 +43,15 @@ export default async function DirectorTeachersPage() {
 
   const teachers = dbTeachers.map((t) => {
     const totalStudents = t.groups.reduce((sum, g) => sum + g.students.length, 0);
+    // Защита от битых связей: если у Teacher отсутствует User (или пустое имя),
+    // не роняем Server Component (иначе React 19: Minified React error #441).
+    const userName = t.user?.name?.trim() || 'Учитель';
 
     return {
       id: t.id,
-      name: t.user.name,
-      phone: t.user.phone,
-      email: t.user.email || '',
+      name: userName,
+      phone: t.user?.phone || '',
+      email: t.user?.email || '',
       subject: t.subject || 'Преподаватель',
       salary: t.salary || 0,
       groupsCount: t.groups.length,
