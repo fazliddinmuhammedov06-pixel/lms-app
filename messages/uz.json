@@ -5,6 +5,11 @@
     "user": "Foydalanuvchi",
     "logout": "Chiqish",
     "role": "Rol",
+    "students": "O'quvchilar",
+    "groups": "Guruhlar",
+    "teachers": "O'qituvchilar",
+    "saved": "Saqlandi",
+    "error": "Xatolik yuz berdi",
     "roles": {
       "DIRECTOR": "Direktor",
       "MANAGER": "Menejer",
@@ -106,8 +111,18 @@
     "reject": "Rad etish",
     "approved": "Ariza tasdiqlandi",
     "rejected": "Ariza rad etildi",
-    "daysShort": ["Du", "Se", "Cho", "Pay", "Ju", "Sha", "Ya"],
-    "monthsShort": ["Yan", "Fev", "Mar", "Apr", "May", "Iyun", "Iyul", "Avg", "Sen", "Okt", "Noy", "Dek"]
+    "scheduled": "Rejalashtirilgan",
+    "daysShort": "kun",
+    "monthsShort": "oy"
+  },
+  "manager": {
+    "dashboard": "Menejer paneli",
+    "totalInBase": "Bazadagi jami",
+    "activeGroups": "Faol guruhlar",
+    "applications": "Arizalar",
+    "pending": "Kutilmoqda",
+    "payments": "To'lovlar",
+    "awaitingPayment": "To'lov kutilmoqda"
   },
   "login": {
     "title": "Tizimga kirish",
