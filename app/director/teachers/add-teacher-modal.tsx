@@ -22,7 +22,7 @@ export function AddTeacherModal({ onClose }: { onClose: () => void }) {
     setLoading(true);
     try {
       // salary: пустое поле = 0 (см. action createTeacher).
-      await createTeacher({
+      const res = await createTeacher({
         name: form.name,
         phone: form.phone,
         password: form.password,
@@ -30,11 +30,17 @@ export function AddTeacherModal({ onClose }: { onClose: () => void }) {
         subject: form.subject || undefined,
         salary: form.salary === '' ? undefined : Number(form.salary),
       });
+
+      if (res && (res as any).error) {
+        toast.error((res as any).error || 'Ошибка при создании учителя');
+        return;
+      }
+
       toast.success(`Учитель ${form.name} создан!`);
       onClose();
       router.refresh();
     } catch (err: any) {
-      toast.error(err.message || 'Ошибка');
+      toast.error(err.message || 'Ошибка при создании учителя');
     } finally {
       setLoading(false);
     }
@@ -43,46 +49,91 @@ export function AddTeacherModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
       <div className="bg-[#1e293b] border border-slate-800 rounded-lg w-full max-w-sm p-5 space-y-3 relative text-xs">
-        <button onClick={onClose} className="absolute top-3 right-3 text-slate-400 hover:text-white">
+        <button onClick={onClose} className="absolute top-3 right-3 text-slate-400 hover:text-white cursor-pointer">
           <X className="w-4 h-4" />
         </button>
         <h2 className="text-sm font-bold text-white">Новый учитель</h2>
-        <form onSubmit={handleAdd} className="space-y-2.5">
+        <form onSubmit={handleAdd} className="space-y-2.5" autoComplete="off">
           <div>
             <label className="block text-slate-300 mb-1 font-medium">ФИО Учителя *</label>
-            <input type="text" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Иванов Иван" className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none" />
+            <input
+              type="text"
+              required
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="Иванов Иван"
+              autoComplete="off"
+              className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none"
+            />
           </div>
           <div>
             <label className="block text-slate-300 mb-1 font-medium">Телефон *</label>
             <input
-                type="tel"
-                required
-                value={form.phone}
-                onChange={(e) => {
-                  let digits = e.target.value.replace(/\D/g, '');
-                  if (digits.startsWith('998')) digits = digits.slice(3);
-                  digits = digits.slice(0, 9);
-                  setForm({ ...form, phone: '+998' + digits });
-                }}
-                placeholder="+998901234567"
-                className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none"
-              />
+              type="tel"
+              required
+              value={form.phone}
+              onChange={(e) => {
+                let digits = e.target.value.replace(/\D/g, '');
+                if (digits.startsWith('998')) digits = digits.slice(3);
+                digits = digits.slice(0, 9);
+                setForm({ ...form, phone: digits ? '+998' + digits : '' });
+              }}
+              placeholder="+998901234567"
+              autoComplete="off"
+              className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none"
+            />
           </div>
           <div>
             <label className="block text-slate-300 mb-1 font-medium">Пароль *</label>
-            <input type="password" required minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Минимум 6 символов" className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none" />
+            <input
+              type="password"
+              required
+              minLength={6}
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              placeholder="Минимум 6 символов"
+              autoComplete="new-password"
+              className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none"
+            />
           </div>
           <div>
             <label className="block text-slate-300 mb-1 font-medium">Предмет</label>
-            <input type="text" value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} placeholder="Например, Английский язык" className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none" />
+            <input
+              type="text"
+              value={form.subject}
+              onChange={(e) => setForm({ ...form, subject: e.target.value })}
+              placeholder="Например, Математика"
+              autoComplete="off"
+              className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none"
+            />
           </div>
           <div>
             <label className="block text-slate-300 mb-1 font-medium">Зарплата (UZS)</label>
-            <input type="number" min={0} value={form.salary} onChange={(e) => setForm({ ...form, salary: e.target.value })} placeholder="Например, 4000000" className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none" />
+            <input
+              type="number"
+              min={0}
+              value={form.salary}
+              onChange={(e) => setForm({ ...form, salary: e.target.value })}
+              placeholder="Например, 4000000"
+              autoComplete="off"
+              className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none"
+            />
           </div>
           <div className="pt-2 flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded font-semibold">Отмена</button>
-            <button type="submit" disabled={loading} className="px-3 py-1.5 bg-orange-500 hover:bg-orange-400 text-white rounded font-bold cursor-pointer">{loading ? '...' : 'Создать'}</button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded font-semibold cursor-pointer"
+            >
+              Отмена
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-3 py-1.5 bg-orange-500 hover:bg-orange-400 text-white rounded font-bold cursor-pointer disabled:opacity-50"
+            >
+              {loading ? '...' : 'Создать'}
+            </button>
           </div>
         </form>
       </div>
