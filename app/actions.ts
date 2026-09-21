@@ -574,6 +574,45 @@ export async function createGroup(data: {
   return { success: true, group };
 }
 
+export async function deleteGroup(groupId: string) {
+  const session = await auth();
+  const role = (session?.user as any)?.role;
+
+  if (!session || (role !== 'DIRECTOR' && role !== 'MANAGER')) {
+    throw new Error('Доступ запрещён. Требуется роль DIRECTOR или MANAGER.');
+  }
+
+  const group = await prisma.group.findUnique({
+    where: { id: groupId },
+    select: {
+      id: true,
+      name: true,
+      students: { select: { id: true } },
+    },
+  });
+
+  if (!group) {
+    throw new Error('Группа не найдена.');
+  }
+
+  // При удалении группы ученики должны остаться в системе,
+  // но потерять связь с этой группой.
+  // Важно: предположено, что в схеме Prisma поле groupId у Student допускает null.
+  await prisma.$transaction(async (tx) => {
+    await tx.student.updateMany({
+      where: { groupId: groupId },
+      data: { groupId: null },
+    });
+    await tx.group.delete({ where: { id: groupId } });
+  });
+
+  revalidatePath('/director/groups');
+  revalidatePath('/director/groups', 'layout');
+  revalidatePath('/manager/groups');
+  revalidatePath('/director');
+  return { success: true };
+}
+
 export async function createLesson(data: {
   groupId: string;
   dayOfWeek?: number;
