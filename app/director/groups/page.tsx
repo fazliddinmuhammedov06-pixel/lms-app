@@ -26,7 +26,7 @@ export default async function DirectorGroupsPage() {
     id: g.id,
     name: g.name,
     subject: g.subject || 'Английский язык',
-    level: g.level || 'A1 Beginner',
+    level: g.level || '',
     teacherName: g.teacher.user.name,
     teacherId: g.teacherId,
     room: g.room || 'Кабинет 101',

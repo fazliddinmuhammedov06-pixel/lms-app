@@ -10,7 +10,7 @@ export function AddGroupModal({ teachers, onClose }: { teachers: any[]; onClose:
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
-    name: '', subject: 'Английский язык', level: 'A1 Beginner', teacherId: teachers[0]?.id || '', room: 'Кабинет 101', monthlyPrice: 350000,
+    name: '', subject: '', level: '', teacherId: teachers[0]?.id || '', room: '', monthlyPrice: 350000,
   });
 
   const handleAdd = async (e: React.FormEvent) => {
@@ -49,7 +49,11 @@ export function AddGroupModal({ teachers, onClose }: { teachers: any[]; onClose:
           </div>
           <div>
             <label className="block text-slate-300 mb-1 font-medium">Предмет</label>
-            <input type="text" value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none" />
+            <input type="text" value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} placeholder="Математика, Английский язык..." className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none" />
+          </div>
+          <div>
+            <label className="block text-slate-300 mb-1 font-medium">Уровень <span className="text-slate-500 font-normal">(необязательно)</span></label>
+            <input type="text" value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} placeholder="Например: B2, Продвинутый, Junior..." className="w-full bg-[#0f172a] border border-slate-700 text-white p-2 rounded focus:outline-none" />
           </div>
           <div>
             <label className="block text-slate-300 mb-1 font-medium">Кабинет</label>

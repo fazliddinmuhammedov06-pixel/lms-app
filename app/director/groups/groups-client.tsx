@@ -51,7 +51,7 @@ export default function GroupsClient({
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="font-bold text-white text-sm">{g.name}</h3>
-                  <p className="text-orange-400 text-xs font-semibold mt-0.5">{g.subject} • {g.level}</p>
+                  <p className="text-orange-400 text-xs font-semibold mt-0.5">{g.subject}{g.level ? ` • ${g.level}` : ''}</p>
                 </div>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
                   g.status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'

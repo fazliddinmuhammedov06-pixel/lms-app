@@ -21,7 +21,7 @@ export default async function TeacherGroupsPage() {
     id: g.id,
     name: g.name,
     subject: g.subject || 'Английский',
-    level: g.level || 'A1',
+    level: g.level || '',
     teacherName: g.teacher.user.name,
     room: g.room || 'Кабинет 101',
     monthlyPrice: g.monthlyPrice,

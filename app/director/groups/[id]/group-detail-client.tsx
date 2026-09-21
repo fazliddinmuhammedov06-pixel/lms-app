@@ -62,7 +62,7 @@ export default function GroupDetailClient({
           </Link>
           <div className="flex-1">
             <h1 className="text-xl font-bold text-white">{group.name}</h1>
-            <p className="text-sm text-orange-400">{group.subject} • {group.level}</p>
+            <p className="text-sm text-orange-400">{group.subject}{group.level ? ` • ${group.level}` : ''}</p>
           </div>
         </div>
 

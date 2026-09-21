@@ -54,7 +54,7 @@ export default async function DirectorGroupDetailPage(props: { params: Promise<{
     id: group.id,
     name: group.name,
     subject: group.subject || 'Английский язык',
-    level: group.level || 'A1 Beginner',
+    level: group.level || '',
     teacherName: group.teacher?.user?.name || '—',
     teacherId: group.teacherId,
     room: group.room || 'Кабинет 101',
